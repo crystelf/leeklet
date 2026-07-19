@@ -1,0 +1,235 @@
+.login-shell {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.login-bg {
+  object-fit: cover;
+  object-position: center center;
+  animation: ken-burns 24s ease-in-out infinite alternate;
+}
+@keyframes ken-burns {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.08) translate(-1%, -2%); }
+}
+
+/* 手机/平板：背景显示右侧（Miku 主体所在区域） */
+@media (max-width: 900px) {
+  .login-bg {
+    object-position: right center;
+  }
+  @keyframes ken-burns {
+    0% { transform: scale(1) translate(0, 0); }
+    100% { transform: scale(1.06) translate(-2%, -1%); }
+  }
+}
+
+/* ---- 左上品牌（Leeklet 标题，无图标无浮动） ---- */
+.login-brand {
+  position: absolute;
+  top: 6vh;
+  left: 6vw;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  color: #fff;
+}
+.login-brand-title {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-shadow: 0 8px 30px rgb(7 42 40 / 0.5);
+  margin: 0;
+  line-height: 1;
+}
+.login-brand-sub {
+  font-size: clamp(14px, 1.4vw, 18px);
+  font-weight: 500;
+  opacity: 0.92;
+  margin: 0;
+  text-shadow: 0 2px 12px rgb(7 42 40 / 0.6);
+}
+
+/* ---- 右侧液态玻璃面板 ---- */
+.login-glass-wrap {
+  position: absolute;
+  top: 44%;
+  right: 7vw;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: min(440px, 92vw);
+}
+
+/* 库内部 .glass 默认 inline-flex + gap 24px 会撑宽，
+   改为 block 撑满外层 div（外层 div 宽度由 style prop 控制） */
+.login-glass-instance .glass {
+  display: block !important;
+  width: 100% !important;
+  gap: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* 隐藏库渲染的 border 层 span（用 glassSize 固定 px 定位，
+   内容变化时跟不上 .glass 尺寸 → 错位。干脆不要边框） */
+.login-shell > span {
+  display: none !important;
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  padding: 30px;
+  color: #fff;
+  text-shadow: 0 2px 12px rgb(7 42 40 / 0.4);
+}
+
+.login-card-head {
+  margin-bottom: 20px;
+}
+.login-card-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
+}
+.login-card-sub {
+  font-size: 14px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+.login-tabs {
+  width: 100%;
+  margin-bottom: 22px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: rgb(255 255 255 / 0.12);
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 999px;
+  padding: 4px;
+  backdrop-filter: blur(8px);
+}
+.login-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 6px;
+  font-size: 13px;
+  color: rgb(255 255 255 / 0.7);
+  border-radius: 999px;
+}
+.login-tab:hover {
+  color: #fff;
+}
+.login-tab[data-active="true"] {
+  background: rgb(255 255 255 / 0.22);
+  color: #fff;
+  box-shadow: 0 2px 8px rgb(7 42 40 / 0.3);
+}
+
+/* 表单字段在玻璃上需要半透明背景 */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.login-form .field-label {
+  color: rgb(255 255 255 / 0.85);
+  text-shadow: 0 1px 4px rgb(7 42 40 / 0.4);
+}
+.login-form .input {
+  background: rgb(255 255 255 / 0.14);
+  border-color: rgb(255 255 255 / 0.2);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+.login-form .input::placeholder {
+  color: rgb(255 255 255 / 0.5);
+}
+.login-form .input:focus {
+  border-color: var(--color-miku-300);
+  box-shadow: 0 0 0 3px rgb(75 195 176 / 0.4);
+  background: rgb(255 255 255 / 0.2);
+}
+
+.login-error {
+  font-size: 13px;
+  color: #fff;
+  background: rgb(255 92 166 / 0.3);
+  border: 1px solid rgb(255 92 166 / 0.4);
+  border-radius: 10px;
+  padding: 9px 12px;
+  text-shadow: none;
+  backdrop-filter: blur(8px);
+}
+
+.login-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgb(255 255 255 / 0.15);
+  font-size: 12px;
+  opacity: 0.8;
+}
+.login-foot-leek {
+  display: grid;
+  place-items: center;
+}
+
+/* 按钮在玻璃上的对比 */
+.login-form .btn-primary {
+  background: var(--color-miku-400);
+  color: #fff;
+  text-shadow: none;
+  box-shadow: 0 8px 24px -8px rgb(7 42 40 / 0.5);
+}
+.login-form .btn-primary:hover {
+  background: var(--color-miku-300);
+}
+
+/* ============ 响应式 ============ */
+@media (max-width: 900px) {
+  .login-brand {
+    top: 4vh;
+    left: 5vw;
+  }
+  .login-brand-title {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 600px) {
+  .login-brand {
+    top: 3vh;
+    left: 4vw;
+  }
+  .login-brand-title {
+    font-size: 30px;
+  }
+  .login-brand-sub {
+    font-size: 12px;
+  }
+  .login-card {
+    padding: 22px;
+  }
+  .login-card-title {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-bg {
+    animation: none !important;
+  }
+  .login-card, .login-form > * {
+    animation-duration: 0.01ms !important;
+  }
+}

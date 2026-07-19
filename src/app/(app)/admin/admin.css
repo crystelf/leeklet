@@ -1,0 +1,111 @@
+.admin-section-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0 0 4px;
+}
+.admin-section-sub {
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin: 0 0 16px;
+}
+.admin-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.admin-input-row > div {
+  flex: 1;
+  min-width: 160px;
+}
+
+.admin-loading {
+  display: grid;
+  place-items: center;
+  padding: 50px;
+}
+.admin-error {
+  color: var(--color-miku-pink-500);
+  font-size: 14px;
+}
+
+.admin-lists {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.admin-list-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.admin-list-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.admin-list-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0;
+  flex: 1;
+}
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.admin-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg-soft);
+}
+.admin-list-qq {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--fg);
+  flex: 1;
+}
+.admin-list-remove {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.admin-list-remove:hover {
+  background: var(--pink-soft);
+  color: var(--color-miku-pink-500);
+}
+.admin-list-empty {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+@media (max-width: 700px) {
+  .admin-lists { grid-template-columns: 1fr; }
+}

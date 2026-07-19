@@ -1,0 +1,288 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Leeklet · Miku 青绿设计系统
+   - 配色：青绿主调 + Miku 粉点缀（发尾粉），白天晨雾青白 / 夜晚深青夜空
+   - 曲线：复刻 css-motion 的贝塞尔（pop / theme / drawer / in-out / back-out）
+   - 签名：飘落大葱叶片 + 音符 + 日月 toggle
+   ========================================================================== */
+
+@theme {
+  --font-display: var(--font-quicksand), ui-rounded, "SF Pro Rounded",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+
+  /* Miku 青绿主色阶 */
+  --color-miku-50: #ecfdf8;
+  --color-miku-100: #d4f3ee;
+  --color-miku-200: #a9e7dc;
+  --color-miku-300: #75d6c4;
+  --color-miku-400: #4ec3b0;
+  --color-miku-500: #2ba896;
+  --color-miku-600: #1d8a7a;
+  --color-miku-700: #186e63;
+  --color-miku-800: #16564f;
+  --color-miku-900: #134541;
+  --color-miku-950: #072a28;
+
+  /* Miku 粉（发尾点缀） */
+  --color-miku-pink-300: #ffb3d9;
+  --color-miku-pink-400: #ff85bf;
+  --color-miku-pink-500: #ff5ca6;
+  --color-miku-pink-600: #e6378a;
+
+  /* 葱白 / 奶白 */
+  --color-cream-50: #fbfdfc;
+  --color-cream-100: #f4f9f7;
+  --color-cream-200: #e9f2ee;
+
+  /* 夜空 */
+  --color-night-700: #1a2429;
+  --color-night-800: #131a1f;
+  --color-night-900: #0d1316;
+  --color-night-950: #070a0c;
+
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2.25rem;
+
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-theme: cubic-bezier(0.78, 0.01, 0.19, 0.98);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-back-out: cubic-bezier(0.000, 0.680, 0.375, 1.175);
+  --ease-walk: cubic-bezier(0.76, 0, 0.25, 0.97);
+}
+
+:root {
+  --bg: var(--color-cream-50);
+  --bg-soft: var(--color-cream-100);
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --fg: #0f1d1a;
+  --fg-soft: #3c4a47;
+  --fg-muted: #6b7873;
+  --border: #dce8e4;
+  --border-soft: #e9f2ee;
+  --accent: var(--color-miku-500);
+  --accent-strong: var(--color-miku-600);
+  --accent-soft: var(--color-miku-100);
+  --accent-contrast: #ffffff;
+  --pink: var(--color-miku-pink-500);
+  --pink-soft: #fff0f7;
+  --shadow-sm: 0 1px 2px rgb(20 60 55 / 0.06);
+  --shadow-md: 0 6px 20px -8px rgb(20 60 55 / 0.18);
+  --shadow-lg: 0 20px 40px -16px rgb(20 60 55 / 0.22);
+  --shadow-accent: 0 10px 28px -10px rgb(43 168 150 / 0.5);
+  --ring: 0 0 0 3px rgb(43 168 150 / 0.35);
+  --star: var(--color-miku-200);
+  --leek-tint: rgba(75, 195, 176, 0.0);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: var(--color-night-900);
+  --bg-soft: var(--color-night-800);
+  --bg-card: var(--color-night-800);
+  --bg-elevated: #1c262b;
+  --fg: #e8f4f0;
+  --fg-soft: #b6c6c1;
+  --fg-muted: #7a8d88;
+  --border: #243036;
+  --border-soft: #1c262b;
+  --accent: var(--color-miku-400);
+  --accent-strong: var(--color-miku-300);
+  --accent-soft: rgb(43 168 150 / 0.16);
+  --accent-contrast: #0a1413;
+  --pink: var(--color-miku-pink-400);
+  --pink-soft: rgb(255 92 166 / 0.14);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 6px 20px -8px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 24px 48px -20px rgb(0 0 0 / 0.65);
+  --shadow-accent: 0 10px 30px -10px rgb(78 195 176 / 0.45);
+  --ring: 0 0 0 3px rgb(78 195 176 / 0.4);
+  --star: var(--color-miku-300);
+  --leek-tint: rgba(75, 195, 176, 0.08);
+  color-scheme: dark;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  min-height: 100dvh;
+  transition: background-color 0.7s var(--ease-theme), color 0.4s var(--ease-theme);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 4px;
+}
+
+/* ---------- 通用工具 ---------- */
+@utility surface {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+@utility surface-soft {
+  background-color: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+}
+
+/* ---------- 飘落大葱叶片 / 音符 环境动画 ---------- */
+@keyframes leaf-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg) scale(var(--s, 1));
+    opacity: 0;
+  }
+  10% { opacity: var(--o, 0.5); }
+  90% { opacity: var(--o, 0.5); }
+  100% {
+    transform: translate3d(var(--drift, 40px), 110vh, 0) rotate(var(--spin, 540deg)) scale(var(--s, 1));
+    opacity: 0;
+  }
+}
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.04, 1.025); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.92); }
+  60% { opacity: 1; transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes draw-check {
+  from { stroke-dashoffset: 35; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes ripple-out {
+  0% { opacity: 0.4; transform: translate(-50%, -50%) scale(0); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(40); }
+}
+
+@keyframes leek-drop {
+  0% { opacity: 0; transform: translate(-50%, -120%) rotate(-25deg) scale(0.6); }
+  50% { opacity: 1; transform: translate(-50%, 10%) rotate(8deg) scale(1.05); }
+  70% { transform: translate(-50%, -6%) rotate(-3deg) scale(0.98); }
+  100% { transform: translate(-50%, 0) rotate(0) scale(1); }
+}
+
+@keyframes letter-pop {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-6px) scale(1.25); }
+  70% { transform: translateY(1px) scale(0.95); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes miku-bob {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-6px) rotate(1deg); }
+}
+
+.animate-rise {
+  animation: rise-in 0.6s var(--ease-theme) both;
+}
+.animate-pop {
+  animation: pop-in 0.5s var(--ease-pop) both;
+}
+.animate-float {
+  animation: float-soft 4s ease-in-out infinite;
+}
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+.animate-miku-bob {
+  animation: miku-bob 5s ease-in-out infinite;
+}
+
+/* 飘落叶片/音符 */
+.ambient-fall {
+  position: absolute;
+  top: -10vh;
+  display: grid;
+  place-items: center;
+  animation: leaf-fall linear infinite;
+  will-change: transform, opacity;
+}
+
+/* stagger helpers */
+.stagger > * {
+  animation: rise-in 0.55s var(--ease-theme) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger > *:nth-child(2) { animation-delay: 0.09s; }
+.stagger > *:nth-child(3) { animation-delay: 0.14s; }
+.stagger > *:nth-child(4) { animation-delay: 0.19s; }
+.stagger > *:nth-child(5) { animation-delay: 0.24s; }
+.stagger > *:nth-child(6) { animation-delay: 0.29s; }
+.stagger > *:nth-child(7) { animation-delay: 0.34s; }
+.stagger > *:nth-child(8) { animation-delay: 0.39s; }
+.stagger > *:nth-child(9) { animation-delay: 0.44s; }
+.stagger > *:nth-child(10) { animation-delay: 0.49s; }
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }

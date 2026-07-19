@@ -1,0 +1,220 @@
+.cards-stock-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.cards-stock-card {
+  transition: transform 0.2s var(--ease-pop), box-shadow 0.2s ease;
+}
+.cards-stock-loading {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+}
+.cards-stock-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+.cards-stock-num {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 4px 0 2px;
+  line-height: 1;
+}
+.cards-stock-num span {
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin-left: 4px;
+  font-weight: 500;
+}
+.cards-stock-days {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin: 0;
+}
+
+.cards-section-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0 0 4px;
+}
+.cards-section-sub {
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin: 0 0 16px;
+}
+
+.cards-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.cards-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--bg-soft);
+  border: 1.5px solid var(--border-soft);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.16s var(--ease-pop);
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-body);
+}
+.cards-pick:active { transform: scale(0.97); }
+.cards-pick-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.cards-pick-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--fg);
+}
+.cards-pick-days {
+  font-size: 13px;
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+.cards-pick-hint {
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.cards-purchase-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.cards-member-info {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+/* 兑换结果 + 大葱 drop */
+.cards-result {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 22px;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--accent-soft);
+  border: 1px solid var(--color-miku-200);
+}
+.cards-leek-drop {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  flex-shrink: 0;
+  animation: leek-drop 0.7s var(--ease-pop) both;
+}
+.cards-result-body {
+  flex: 1;
+  min-width: 0;
+}
+.cards-result-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-strong);
+  margin: 0 0 6px;
+}
+.cards-result-code {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--fg);
+  background: var(--bg-card);
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+  word-break: break-all;
+}
+.cards-result-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.cards-result-until {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+/* 明文列表 */
+.cards-codes-tabs {
+  margin-bottom: 14px;
+}
+.cards-codes-loading {
+  display: grid;
+  place-items: center;
+  padding: 30px;
+}
+.cards-codes-error {
+  color: var(--color-miku-pink-500);
+  font-size: 13px;
+}
+.cards-codes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cards-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+}
+.cards-code-hash {
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+.cards-code-text {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: 0.04em;
+  word-break: break-all;
+}
+.cards-copy-small {
+  padding: 5px 8px !important;
+}
+
+@media (max-width: 700px) {
+  .cards-stock-grid { grid-template-columns: 1fr; }
+  .cards-pick-grid { grid-template-columns: 1fr; }
+  .cards-result { flex-direction: column; text-align: center; }
+  .cards-result-code { font-size: 18px; }
+}

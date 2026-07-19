@@ -149,6 +149,7 @@ const GlassContainer = forwardRef<
     glassSize?: { width: number; height: number }
     onClick?: () => void
     mode?: "standard" | "polar" | "prominent" | "shader"
+    onHeightChange?: (height: number) => void
   }>
 >(
   (
@@ -171,11 +172,15 @@ const GlassContainer = forwardRef<
       glassSize = { width: 270, height: 69 },
       onClick,
       mode = "standard",
+      onHeightChange,
     },
     ref,
   ) => {
     const filterId = useId()
     const [shaderMapUrl, setShaderMapUrl] = useState<string>("")
+    const contentRef = useRef<HTMLDivElement>(null)
+    const glassInnerRef = useRef<HTMLDivElement>(null)
+    const [contentHeight, setContentHeight] = useState<number | null>(null)
 
     const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
 
@@ -187,6 +192,27 @@ const GlassContainer = forwardRef<
       }
     }, [mode, glassSize.width, glassSize.height])
 
+    // Drive .glass height with a measured px value so it can transition.
+    // auto height isn't transitionable (the declaration stays "auto" while only
+    // the content changes); measuring content + padding lets us animate the px
+    // height in lockstep with the border layers.
+    useEffect(() => {
+      const content = contentRef.current
+      const glass = glassInnerRef.current
+      if (!content || !glass) return
+      const update = () => {
+        const cs = getComputedStyle(glass)
+        const padY = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0)
+        const h = content.offsetHeight + padY
+        setContentHeight(h)
+        onHeightChange?.(h)
+      }
+      update()
+      const ro = new ResizeObserver(update)
+      ro.observe(content)
+      return () => ro.disconnect()
+    }, [onHeightChange])
+
     const backdropStyle = {
       filter: isFirefox ? null : `url(#${filterId})`,
       backdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`,
@@ -197,6 +223,7 @@ const GlassContainer = forwardRef<
         <GlassFilter mode={mode} id={filterId} displacementScale={displacementScale} aberrationIntensity={aberrationIntensity} width={glassSize.width} height={glassSize.height} shaderMapUrl={shaderMapUrl} />
 
         <div
+          ref={glassInnerRef}
           className="glass"
           style={{
             borderRadius: `${cornerRadius}px`,
@@ -206,7 +233,8 @@ const GlassContainer = forwardRef<
             gap: "24px",
             padding,
             overflow: "hidden",
-            transition: "all 0.2s ease-in-out",
+            transition: "all ease-out 0.2s",
+            height: contentHeight != null ? `${contentHeight}px` : undefined,
             boxShadow: overLight ? "0px 16px 70px rgba(0, 0, 0, 0.75)" : "0px 12px 40px rgba(0, 0, 0, 0.25)",
           }}
           onMouseEnter={onMouseEnter}
@@ -228,6 +256,7 @@ const GlassContainer = forwardRef<
 
           {/* user content stays sharp */}
           <div
+            ref={contentRef}
             className="transition-all duration-150 ease-in-out text-white"
             style={{
               position: "relative",
@@ -427,25 +456,31 @@ export default function LiquidGlass({
     }
   }, [globalMousePos, elasticity, calculateFadeInFactor])
 
-  // Track glass size on mount, window resize, and content changes. ResizeObserver
-  // keeps the border layers aligned when children grow/shrink (e.g. tab switches).
+  // Track glass width on mount and window resize. Height comes from
+  // GlassContainer's content measurement (onHeightChange) so the border layers
+  // and .glass share one source and animate in lockstep, avoiding the extra
+  // ResizeObserver hop through the outer div that delayed the border.
   useEffect(() => {
     const el = glassRef.current
     if (!el) return
 
-    const updateGlassSize = () => {
+    const updateGlassWidth = () => {
       const rect = el.getBoundingClientRect()
-      setGlassSize({ width: rect.width, height: rect.height })
+      setGlassSize(prev => ({ ...prev, width: rect.width }))
     }
 
-    updateGlassSize()
-    const ro = new ResizeObserver(updateGlassSize)
+    updateGlassWidth()
+    const ro = new ResizeObserver(updateGlassWidth)
     ro.observe(el)
-    window.addEventListener("resize", updateGlassSize)
+    window.addEventListener("resize", updateGlassWidth)
     return () => {
       ro.disconnect()
-      window.removeEventListener("resize", updateGlassSize)
+      window.removeEventListener("resize", updateGlassWidth)
     }
+  }, [])
+
+  const handleHeightChange = useCallback((height: number) => {
+    setGlassSize(prev => (prev.height === height ? prev : { ...prev, height }))
   }, [])
 
   const transformStyle = `translate(calc(-50% + ${calculateElasticTranslation().x}px), calc(-50% + ${calculateElasticTranslation().y}px)) ${isActive && Boolean(onClick) ? "scale(0.96)" : calculateDirectionalScale()}`
@@ -508,6 +543,7 @@ export default function LiquidGlass({
         overLight={overLight}
         onClick={onClick}
         mode={mode}
+        onHeightChange={handleHeightChange}
       >
         {children}
       </GlassContainer>

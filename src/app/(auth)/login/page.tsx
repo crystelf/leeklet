@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LeekLogo } from "@/components/shell/leek-logo";
-import LiquidGlass from "liquid-glass-react";
+import LiquidGlass from "@/components/liquid-glass";
 import { cn } from "@/lib/cn";
 import "./login.css";
 
@@ -39,7 +39,7 @@ export default function LoginPage() {
 
   const glassStyle: React.CSSProperties = isMobile
     ? { position: "absolute", top: "50%", left: "50%", width: "min(320px, 86vw)" }
-    : { position: "absolute", top: "36%", left: "calc(100vw - 7vw - min(360px, 92vw) / 2)", width: "min(360px, 92vw)" };
+    : { position: "absolute", top: "50%", left: "calc(100vw - 7vw - min(360px, 92vw) / 2)", width: "min(360px, 92vw)" };
 
   const switchTab = (t: Tab) => {
     if (t === tab) return;

@@ -73,12 +73,6 @@
   box-sizing: border-box !important;
 }
 
-/* 隐藏库渲染的 border 层 span（用 glassSize 固定 px 定位，
-   内容变化时跟不上 .glass 尺寸 → 错位。干脆不要边框） */
-.login-shell > span {
-  display: none !important;
-}
-
 .login-card {
   position: relative;
   z-index: 1;

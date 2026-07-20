@@ -152,6 +152,9 @@
   box-shadow: 0 0 0 3px rgb(75 195 176 / 0.4);
   background: rgb(255 255 255 / 0.2);
 }
+.login-form .input-hint {
+  color: rgba(255, 255, 255, 0.72);
+}
 
 .login-error {
   font-size: 13px;

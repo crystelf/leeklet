@@ -15,7 +15,7 @@ export function Input({ label, hint, className, id, ...rest }: InputProps) {
         </label>
       )}
       <input id={id} className={cn("input", className)} {...rest} />
-      {hint && <p className="mt-1.5 text-xs" style={{ color: "var(--fg-muted)" }}>{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs input-hint">{hint}</p>}
     </div>
   );
 }
@@ -34,7 +34,7 @@ export function Textarea({ label, hint, className, id, ...rest }: TextareaProps)
         </label>
       )}
       <textarea id={id} className={cn("textarea", className)} {...rest} />
-      {hint && <p className="mt-1.5 text-xs" style={{ color: "var(--fg-muted)" }}>{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs input-hint">{hint}</p>}
     </div>
   );
 }

@@ -18,7 +18,6 @@ import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RoleBadge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { LeekLogo } from "@/components/shell/leek-logo";
 import { PageHeader } from "@/components/shell/page-header";
 import { roleLabel, remainingDays, formatMs } from "@/lib/format";
 import "./dashboard.css";
@@ -59,18 +58,25 @@ export default function DashboardPage() {
       {/* 欢迎卡片 */}
       <Card className="overflow-hidden mb-6">
         <div className="dash-welcome">
-          <div className="dash-welcome-leek animate-float">
-            <LeekLogo size={64} />
-          </div>
+          <img
+            className="dash-welcome-avatar"
+            src={`https://q.qlogo.cn/headimg_dl?dst_uin=${user.qq}&spec=160`}
+            alt={user.nickname ?? `QQ ${user.qq}`}
+            draggable={false}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
           <div className="dash-welcome-body">
             <p className="dash-welcome-hi">
               <Sparkles size={14} /> 你好
             </p>
             <h2 className="dash-welcome-name">
-              QQ {user.qq}
+              {user.nickname || `QQ ${user.qq}`}
               <RoleBadge role={user.role} className="ml-2" />
             </h2>
             <p className="dash-welcome-sub">
+              {user.nickname ? `QQ ${user.qq} · ` : ""}
               {user.email ? `邮箱 ${user.email} · ` : ""}
               {roleLabel(user.role)}
               {user.registered ? " · 已设置密码" : " · 仅密钥登录"}

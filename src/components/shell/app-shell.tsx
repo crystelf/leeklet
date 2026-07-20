@@ -9,8 +9,6 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { LeekLogoWord, LeekLogo } from "./leek-logo";
 import { visibleNav, MOBILE_PRIMARY } from "./nav-config";
-import { RoleBadge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/toast";
 import { remainingDays, roleLabel } from "@/lib/format";
 import "./app-shell.css";
 
@@ -194,7 +192,6 @@ function MobileBottomNav({ pathname }: { pathname: string }) {
 
 function UserCard() {
   const { user, loading } = useAuth();
-  const toast = useToast();
 
   if (loading || !user) {
     return (
@@ -207,13 +204,19 @@ function UserCard() {
   const days = remainingDays(user.memberUntil);
   return (
     <div className="app-usercard">
-      <div className="app-usercard-avatar" aria-hidden="true">
-        <LeekLogo size={26} />
-      </div>
+      <img
+        className="app-usercard-avatar"
+        src={`https://q.qlogo.cn/headimg_dl?dst_uin=${user.qq}&spec=100`}
+        alt={user.nickname ?? `QQ ${user.qq}`}
+        loading="lazy"
+        draggable={false}
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.display = "none";
+        }}
+      />
       <div className="app-usercard-body">
         <div className="app-usercard-top">
-          <span className="app-usercard-qq">{user.qq}</span>
-          <RoleBadge role={user.role} />
+          <span className="app-usercard-qq">{user.nickname ?? user.qq}</span>
         </div>
         <div className="app-usercard-sub">
           {user.role === "member" && days !== null
@@ -222,18 +225,6 @@ function UserCard() {
               : "会员已过期"
             : roleLabel(user.role)}
         </div>
-        <button
-          type="button"
-          className="app-usercard-copy"
-          onClick={() => {
-            navigator.clipboard
-              .writeText(String(user.qq))
-              .then(() => toast.success("已复制 QQ 号"))
-              .catch(() => toast.error("复制失败"));
-          }}
-        >
-          复制 QQ
-        </button>
       </div>
     </div>
   );

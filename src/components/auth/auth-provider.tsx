@@ -42,9 +42,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       const u = await api.get<UserMe>("/users/me");
-      setUser(u);
+      let next = u;
+      if (!u.nickname) {
+        try {
+          const refreshed = await api.post<{
+            ok: true;
+            nickname: string | null;
+          }>("/users/me/refresh-nickname");
+          if (refreshed.nickname) {
+            next = { ...u, nickname: refreshed.nickname };
+          }
+        } catch {
+          next = u;
+        }
+      }
+      setUser(next);
       setError(null);
-      return u;
+      return next;
     } catch (e) {
       setUser(null);
       if (e instanceof ApiRequestError && e.status === 403) {

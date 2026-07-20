@@ -79,9 +79,9 @@ export default function GroupsPage() {
         <div className="groups-loading"><Spinner /></div>
       ) : error ? (
         <Card soft><CardBody><p className="groups-error">{error}</p></CardBody></Card>
-      ) : data && data.groups.length > 0 ? (
+      ) : data && data.length > 0 ? (
         <div className="groups-grid">
-          {data.groups.map((g) => (
+          {data.map((g) => (
             <GroupCard
               key={g.groupId}
               group={g}

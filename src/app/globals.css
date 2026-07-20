@@ -123,7 +123,16 @@ body {
   background-color: var(--bg);
   color: var(--fg);
   min-height: 100dvh;
-  transition: background-color 0.7s var(--ease-theme), color 0.4s var(--ease-theme);
+}
+
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
+  transition-duration: 220ms !important;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  transition-delay: 0ms !important;
 }
 
 ::selection {
@@ -286,3 +295,35 @@ body {
   border: 2px solid var(--bg);
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ============ Sonner toast 主题色（白天/黑夜适配） ============
+   通知葱绿 · 警告黄 · 错误粉红 · 成功也用葱绿
+   覆盖 sonner 默认 CSS 变量，data-sonner-theme 由 Toaster 自动设置。 */
+[data-sonner-toaster][data-sonner-theme="light"] {
+  --info-bg: #2ba896;
+  --info-border: #2ba896;
+  --info-text: #ffffff;
+  --warning-bg: #f5b800;
+  --warning-border: #f5b800;
+  --warning-text: #ffffff;
+  --error-bg: #ff5ca6;
+  --error-border: #ff5ca6;
+  --error-text: #ffffff;
+  --success-bg: #2ba896;
+  --success-border: #2ba896;
+  --success-text: #ffffff;
+}
+[data-sonner-toaster][data-sonner-theme="dark"] {
+  --info-bg: #4ec3b0;
+  --info-border: #4ec3b0;
+  --info-text: #0a1413;
+  --warning-bg: #f5b800;
+  --warning-border: #f5b800;
+  --warning-text: #0a1413;
+  --error-bg: #ff5ca6;
+  --error-border: #ff5ca6;
+  --error-text: #ffffff;
+  --success-bg: #4ec3b0;
+  --success-border: #4ec3b0;
+  --success-text: #0a1413;
+}

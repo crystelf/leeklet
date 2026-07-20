@@ -1,15 +1,31 @@
 "use client";
 
-import { ThemeProvider } from "@/components/theme/theme-provider";
+import { Toaster } from "sonner";
+import { ThemeProvider, useTheme } from "@/components/theme/theme-provider";
 import { AuthProvider } from "@/components/auth/auth-provider";
-import { ToastProvider } from "@/components/ui/toast";
+
+function ThemedToaster() {
+  const { resolved } = useTheme();
+  return (
+    <Toaster
+      theme={resolved}
+      position="top-center"
+      richColors
+      closeButton
+      toastOptions={{
+        duration: 3500,
+      }}
+    />
+  );
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      <ToastProvider>
-        <AuthProvider>{children}</AuthProvider>
-      </ToastProvider>
+      <AuthProvider>
+        {children}
+        <ThemedToaster />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

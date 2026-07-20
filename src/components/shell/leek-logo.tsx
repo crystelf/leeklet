@@ -17,7 +17,7 @@ export function LeekLogoWord({ size = 34, stacked = false }: { size?: number; st
     return (
       <div className="flex flex-col items-center gap-1.5">
         <span
-          className="grid place-items-center animate-miku-bob"
+          className="grid place-items-center"
           style={{ width: size, height: size }}
         >
           <LeekLogo size={size} />
@@ -47,7 +47,7 @@ export function LeekLogoWord({ size = 34, stacked = false }: { size?: number; st
   return (
     <div className="flex items-center gap-2.5">
       <span
-        className="grid place-items-center animate-miku-bob"
+        className="grid place-items-center"
         style={{ width: size, height: size }}
       >
         <LeekLogo size={size} />
@@ -65,6 +65,7 @@ export function LeekLogoWord({ size = 34, stacked = false }: { size?: number; st
             fontSize: size * 0.28,
             color: "var(--accent)",
             letterSpacing: "0.08em",
+            marginTop: 4,
           }}
         >
           大葱管理

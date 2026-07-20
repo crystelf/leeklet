@@ -6,12 +6,12 @@
   padding: 24px;
   flex-wrap: wrap;
 }
-.dash-welcome-leek {
-  display: grid;
-  place-items: center;
+.dash-welcome-avatar {
+  display: block;
   width: 84px;
   height: 84px;
   border-radius: 24px;
+  object-fit: cover;
   background: var(--accent-soft);
   flex-shrink: 0;
 }

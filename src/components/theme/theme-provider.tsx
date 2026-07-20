@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { THEME_KEY } from "./theme-script";
@@ -37,6 +38,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>("system");
   const [resolved, setResolved] = useState<Resolved>("light");
   const [mounted, setMounted] = useState(false);
+  const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const applyWithTransition = useCallback((next: Resolved) => {
+    const root = document.documentElement;
+    if (transitionTimer.current) clearTimeout(transitionTimer.current);
+    root.classList.add("theme-transitioning");
+    void root.offsetWidth;
+    apply(next);
+    transitionTimer.current = setTimeout(() => {
+      root.classList.remove("theme-transitioning");
+      transitionTimer.current = null;
+    }, 220);
+  }, []);
 
   useEffect(() => {
     const stored = (localStorage.getItem(THEME_KEY) as ThemeMode) || "system";
@@ -54,11 +68,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const handler = () => {
       const next: Resolved = mq.matches ? "dark" : "light";
       setResolved(next);
-      apply(next);
+      applyWithTransition(next);
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
-  }, [mode, mounted]);
+  }, [mode, mounted, applyWithTransition]);
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimer.current) clearTimeout(transitionTimer.current);
+      document.documentElement.classList.remove("theme-transitioning");
+    };
+  }, []);
 
   const setMode = useCallback((m: ThemeMode) => {
     setModeState(m);
@@ -69,8 +90,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
     const next: Resolved = m === "system" ? (systemPrefersDark() ? "dark" : "light") : m;
     setResolved(next);
-    apply(next);
-  }, []);
+    applyWithTransition(next);
+  }, [applyWithTransition]);
 
   const toggle = useCallback(() => {
     setMode(resolved === "dark" ? "light" : "dark");

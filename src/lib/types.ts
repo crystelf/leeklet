@@ -32,6 +32,7 @@ export interface UserMe {
   ok: true;
   id: number;
   qq: number;
+  nickname?: string | null;
   email: string | null;
   role: Role;
   memberUntil: number | null;
@@ -83,10 +84,7 @@ export interface ManagedGroup {
   activationEnd: number | null;
   botEnabled: boolean;
 }
-export interface GroupsManagedRes {
-  ok: true;
-  groups: ManagedGroup[];
-}
+export type GroupsManagedRes = ManagedGroup[];
 export interface GroupClaimReq {
   groupId: number;
   topic: string;

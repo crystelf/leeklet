@@ -67,13 +67,13 @@ function ControlPageInner() {
   );
 
   useEffect(() => {
-    if (!selected && managed?.groups.length) {
-      setSelected(managed.groups[0].groupId);
+    if (!selected && managed?.length) {
+      setSelected(managed[0]?.groupId ?? null);
     }
   }, [managed, selected]);
 
   const selectedGroup = useMemo(
-    () => managed?.groups.find((g) => g.groupId === selected) ?? null,
+    () => managed?.find((g) => g.groupId === selected) ?? null,
     [managed, selected]
   );
 
@@ -88,9 +88,9 @@ function ControlPageInner() {
       <Card className="mb-5">
         <CardBody>
           <label className="field-label">选择群</label>
-          {managed?.groups.length ? (
+          {managed?.length ? (
             <div className="control-group-select">
-              {managed.groups.map((g) => (
+              {managed.map((g) => (
                 <button
                   key={g.groupId}
                   type="button"
@@ -124,7 +124,7 @@ function ControlPageInner() {
           <AccessHookSection groupId={selected} />
           <AiControlSection groupId={selected} />
         </div>
-      ) : managed?.groups.length === 0 ? (
+      ) : managed?.length === 0 ? (
         <Empty icon={SlidersHorizontal} title="没有可控制的群" hint="认领群后即可在此管理 bot 与 AI 开关" />
       ) : null}
     </>

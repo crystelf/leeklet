@@ -134,7 +134,7 @@ export default function LoginPage() {
         <div className="login-card">
           <header className="login-card-head">
             <h2 className="login-card-title">欢迎回来</h2>
-            <p className="login-card-sub">选择方式进入你的大葱世界</p>
+            <p className="login-card-sub">选择方式进入管理后台</p>
           </header>
 
           <div className="tab-bar login-tabs" role="tablist">
@@ -169,11 +169,14 @@ export default function LoginPage() {
                   name="key"
                   label="登录密钥"
                   placeholder="ABCD1234"
-                  hint="8 位密钥，15 分钟内有效"
+                  hint="给机器人发送/auth获取登陆密钥"
                   autoComplete="one-time-code"
                   required
                   maxLength={8}
-                  style={{ textTransform: "uppercase", letterSpacing: "0.2em" }}
+                  style={{
+                    textTransform: "uppercase",
+                    letterSpacing: "0.2em",
+                  }}
                 />
                 <Button
                   type="submit"
@@ -230,7 +233,7 @@ export default function LoginPage() {
                   name="key"
                   label="鉴权密钥"
                   placeholder="ABCD1234"
-                  hint="先在 QQ 发 /auth 获取密钥验证归属"
+                  hint="给机器人发送/auth获取密钥"
                   required
                   maxLength={8}
                   style={{ textTransform: "uppercase", letterSpacing: "0.2em" }}
@@ -269,7 +272,7 @@ export default function LoginPage() {
             <span className="login-foot-leek">
               <LeekLogo size={20} />
             </span>
-            <span>Leeklet · 基于 mioku-plugin-crystelf</span>
+            <span>Leeklet</span>
           </footer>
         </div>
       </LiquidGlass>

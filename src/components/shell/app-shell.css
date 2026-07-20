@@ -70,15 +70,6 @@
   color: var(--accent-strong) !important;
   font-weight: 600;
 }
-.app-nav-item-active::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  width: 3px;
-  height: 60%;
-  border-radius: 999px;
-  background: var(--accent);
-}
 
 .app-main {
   min-width: 0;

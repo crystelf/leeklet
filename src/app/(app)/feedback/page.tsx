@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   MessageSquare,
   Plus,
   Reply,
-  Images,
+  Paperclip,
+  X,
   RefreshCw,
   MessagesSquare,
 } from "lucide-react";
@@ -15,7 +16,9 @@ import type {
   FeedbackListRes,
   FeedbackDetailRes,
   Feedback,
+  FeedbackAttachmentRef,
   FeedbackStatus,
+  FeedbackUploadRes,
 } from "@/lib/types";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,8 +31,39 @@ import { PageHeader } from "@/components/shell/page-header";
 import { useToast } from "@/components/ui/toast";
 import { useFetch } from "@/lib/use-fetch";
 import { isAdmin, isStaff, formatRelative } from "@/lib/format";
+import { cn } from "@/lib/cn";
 import "./feedback.css";
-import "./feedback.css";
+
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
+interface PendingAttachment {
+  key: string;
+  name: string;
+  mime: string;
+  sizeBytes: number;
+  uploadedId?: number;
+  uploading?: boolean;
+  error?: string;
+}
+
+function readFileBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = (reader.result as string) || "";
+      const idx = result.indexOf(",");
+      resolve(idx >= 0 ? result.slice(idx + 1) : result);
+    };
+    reader.onerror = () => reject(new Error("读取文件失败"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
 
 export default function FeedbackPage() {
   const { user } = useAuth();
@@ -145,24 +179,97 @@ function SubmitDialog({
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [content, setContent] = useState("");
-  const [imagesText, setImagesText] = useState("");
+  const [files, setFiles] = useState<PendingAttachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = async (incoming: FileList | null) => {
+    if (!incoming) return;
+    const additions: PendingAttachment[] = [];
+    const overSized: string[] = [];
+    for (const file of Array.from(incoming)) {
+      if (file.size > MAX_FILE_BYTES) {
+        overSized.push(`${file.name}（${formatBytes(file.size)}）`);
+        continue;
+      }
+      additions.push({
+        key: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`,
+        name: file.name,
+        mime: file.type || "application/octet-stream",
+        sizeBytes: file.size,
+      });
+    }
+    if (overSized.length) {
+      toast.error(`${overSized.join("、")} 超过 10MB 限制`);
+    }
+    setFiles((prev) => [...prev, ...additions]);
+
+    for (const add of additions) {
+      const original = Array.from(incoming).find((f) => f.name === add.name && f.size === add.sizeBytes);
+      if (!original) continue;
+      setFiles((prev) =>
+        prev.map((f) => (f.key === add.key ? { ...f, uploading: true } : f)),
+      );
+      try {
+        const base64 = await readFileBase64(original);
+        const res = await api.post<FeedbackUploadRes>("/attachments", {
+          name: add.name,
+          mime: add.mime,
+          base64,
+        });
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.key === add.key
+              ? { ...f, uploadedId: res.id, uploading: false, error: undefined }
+              : f,
+          ),
+        );
+      } catch (err) {
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.key === add.key
+              ? {
+                  ...f,
+                  uploading: false,
+                  error: err instanceof ApiRequestError ? err.body.error : "上传失败",
+                }
+              : f,
+          ),
+        );
+      }
+    }
+  };
+
+  const removeFile = (key: string) => {
+    setFiles((prev) => prev.filter((f) => f.key !== key));
+  };
 
   const submit = async () => {
     if (!content.trim()) {
       toast.error("请填写反馈内容");
       return;
     }
+    if (files.some((f) => f.uploading)) {
+      toast.error("文件还在上传，请稍候");
+      return;
+    }
+    const failed = files.filter((f) => f.error);
+    if (failed.length) {
+      toast.error("有文件上传失败，请删除后重试");
+      return;
+    }
     setBusy(true);
     try {
-      const images = imagesText
-        .split(/[\n,，\s]+/)
-        .map((s) => s.trim())
-        .filter((s) => s.startsWith("http"))
-        .slice(0, 9);
-      await api.post("/feedback", { content: content.trim(), images });
+      const attachmentIds = files
+        .map((f) => f.uploadedId)
+        .filter((id): id is number => typeof id === "number");
+      await api.post("/feedback", {
+        content: content.trim(),
+        attachmentIds,
+      });
       toast.success("反馈已提交");
       setContent("");
-      setImagesText("");
+      setFiles([]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       onDone();
     } catch (e) {
       toast.error(e instanceof ApiRequestError ? e.body.error : "提交失败");
@@ -175,7 +282,7 @@ function SubmitDialog({
     <Modal
       open={open}
       title="提交反馈"
-      description="描述你遇到的问题或建议，最多可附 9 张图片链接。"
+      description="描述你遇到的问题或建议，可附加文件。文件单次最大 10MB。"
       confirmText="提交"
       busy={busy}
       onConfirm={submit}
@@ -188,12 +295,51 @@ function SubmitDialog({
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
-        <Textarea
-          label="图片链接（可选）"
-          placeholder="每行一个 URL，最多 9 张"
-          value={imagesText}
-          onChange={(e) => setImagesText(e.target.value)}
-        />
+
+        <div>
+          <label className="field-label">附加文件（可选）</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="feedback-file-input"
+            onChange={(e) => {
+              void handleFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          {files.length > 0 && (
+            <ul className="feedback-file-list">
+              {files.map((f) => (
+                <li
+                  key={f.key}
+                  className={cn(
+                    "feedback-file-row",
+                    f.uploading && "is-uploading",
+                    f.error && "is-error",
+                  )}
+                >
+                  <Paperclip size={14} className="feedback-file-icon" />
+                  <span className="feedback-file-name">{f.name}</span>
+                  <span className="feedback-file-size">{formatBytes(f.sizeBytes)}</span>
+                  {f.uploading && <span className="feedback-file-status">上传中…</span>}
+                  {f.error && <span className="feedback-file-status is-error">{f.error}</span>}
+                  {f.uploadedId != null && !f.error && (
+                    <span className="feedback-file-status is-ok">已上传</span>
+                  )}
+                  <button
+                    type="button"
+                    className="feedback-file-remove"
+                    onClick={() => removeFile(f.key)}
+                    aria-label={`移除 ${f.name}`}
+                  >
+                    <X size={13} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </Modal>
   );

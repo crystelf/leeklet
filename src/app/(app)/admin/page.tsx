@@ -47,16 +47,16 @@ export default function AdminPage() {
     );
   }
 
-  const modify = async (kind: "internals" | "admins", add: boolean) => {
+  const addOne = async (kind: "internals" | "admins") => {
     const qq = Number(qqInput.trim());
     if (!qq) {
       toast.error("请输入 QQ 号");
       return;
     }
-    setBusy(`${kind}:${add}`);
+    setBusy(`${kind}:add`);
     try {
-      await api.post<AdminModifyRes>(`/admin/${kind}`, { qq, add });
-      toast.success(add ? `已添加 ${qq}` : `已移除 ${qq}`);
+      await api.post<AdminModifyRes>(`/admin/${kind}`, { qq, add: true });
+      toast.success(`已添加 ${qq}`);
       setQqInput("");
       void reload();
     } catch (e) {
@@ -89,8 +89,8 @@ export default function AdminPage() {
 
       <Card className="mb-5">
         <CardBody>
-          <h3 className="admin-section-title">添加 / 移除</h3>
-          <p className="admin-section-sub">输入 QQ 号，选择添加到内部成员或管理员。</p>
+          <h3 className="admin-section-title">添加成员</h3>
+          <p className="admin-section-sub">输入 QQ 号，加入内部成员或管理员；移除从下方列表操作。</p>
           <div className="admin-input-row">
             <Input
               type="number"
@@ -100,35 +100,19 @@ export default function AdminPage() {
             />
             <Button
               variant="soft"
-              onClick={() => void modify("internals", true)}
-              loading={busy === "internals:true"}
+              onClick={() => void addOne("internals")}
+              loading={busy === "internals:add"}
+              disabled={!qqInput.trim()}
             >
               <UserPlus size={14} /> 加内部
             </Button>
             <Button
-              onClick={() => void modify("admins", true)}
-              loading={busy === "admins:true"}
+              onClick={() => void addOne("admins")}
+              loading={busy === "admins:add"}
+              disabled={!qqInput.trim()}
             >
               <Crown size={14} /> 加管理员
             </Button>
-            {qqInput && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => void modify("internals", false)}
-                  loading={busy === "internals:false"}
-                >
-                  <UserMinus size={14} /> 移内部
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => void modify("admins", false)}
-                  loading={busy === "admins:false"}
-                >
-                  <UserMinus size={14} /> 移管理员
-                </Button>
-              </>
-            )}
           </div>
         </CardBody>
       </Card>
@@ -138,7 +122,7 @@ export default function AdminPage() {
       ) : error ? (
         <Card soft><CardBody><p className="admin-error">{error}</p></CardBody></Card>
       ) : data ? (
-        <div className="admin-lists">
+        <div className="admin-lists stagger">
           <RoleList
             title="内部成员"
             icon={<Users size={16} />}

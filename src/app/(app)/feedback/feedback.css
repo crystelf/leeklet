@@ -176,3 +176,97 @@
 .feedback-comment-form > textarea {
   width: 100%;
 }
+
+.feedback-file-input {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--border);
+  background: var(--bg-soft);
+  color: var(--fg-soft);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 200ms ease, background-color 200ms ease;
+}
+.feedback-file-input:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.feedback-file-input::file-selector-button {
+  display: none;
+}
+.feedback-file-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.feedback-file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+  font-size: 13px;
+  transition: background-color 200ms ease, opacity 200ms ease;
+}
+.feedback-file-row.is-uploading {
+  opacity: 0.7;
+}
+.feedback-file-row.is-error {
+  border-color: var(--color-miku-pink-500);
+  background: var(--pink-soft);
+}
+.feedback-file-icon {
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+.feedback-file-name {
+  flex: 1;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.feedback-file-size {
+  color: var(--fg-muted);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.feedback-file-status {
+  font-size: 11px;
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+.feedback-file-status.is-ok {
+  color: var(--accent-strong);
+}
+.feedback-file-status.is-error {
+  color: var(--color-miku-pink-500);
+}
+.feedback-file-remove {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background-color 200ms ease, color 200ms ease, transform 160ms var(--ease-pop);
+}
+.feedback-file-remove:hover {
+  background: var(--pink-soft);
+  color: var(--color-miku-pink-500);
+}
+.feedback-file-remove:active {
+  transform: scale(0.92);
+}

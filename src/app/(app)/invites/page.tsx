@@ -56,7 +56,7 @@ export default function InvitesPage() {
       ) : error ? (
         <Card soft><CardBody><p className="invites-error">{error}</p></CardBody></Card>
       ) : mine?.invites.length ? (
-        <div className="invites-grid">
+        <div className="invites-grid stagger">
           {mine.invites.map((iv) => (
             <InviteCard key={iv.id} invite={iv} />
           ))}
@@ -159,7 +159,7 @@ function ReviewSection({ onReview }: { onReview: (iv: Invite) => void }) {
       {loading ? (
         <div className="invites-loading"><Spinner /></div>
       ) : data?.invites.length ? (
-        <div className="invites-grid">
+        <div className="invites-grid stagger">
           {data.invites.map((iv) => (
             <Card key={iv.id} className="invite-card">
               <CardBody>

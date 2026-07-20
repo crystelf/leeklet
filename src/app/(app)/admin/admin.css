@@ -77,6 +77,10 @@
   padding: 10px 12px;
   border-radius: 12px;
   background: var(--bg-soft);
+  transition: background-color 200ms ease;
+}
+.admin-list-item:hover {
+  background: var(--bg-card);
 }
 .admin-list-qq {
   font-family: var(--font-display);
@@ -95,11 +99,17 @@
   border: none;
   color: var(--fg-muted);
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    transform 160ms var(--ease-pop);
 }
 .admin-list-remove:hover {
   background: var(--pink-soft);
   color: var(--color-miku-pink-500);
+}
+.admin-list-remove:active {
+  transform: scale(0.92);
 }
 .admin-list-empty {
   font-size: 13px;

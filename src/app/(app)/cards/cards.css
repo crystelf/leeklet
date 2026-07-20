@@ -1,45 +1,3 @@
-.cards-stock-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.cards-stock-card {
-  transition: transform 0.2s var(--ease-pop), box-shadow 0.2s ease;
-}
-.cards-stock-loading {
-  grid-column: 1 / -1;
-  display: grid;
-  place-items: center;
-  padding: 40px;
-}
-.cards-stock-top {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--fg-muted);
-}
-.cards-stock-num {
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--fg);
-  margin: 4px 0 2px;
-  line-height: 1;
-}
-.cards-stock-num span {
-  font-size: 13px;
-  color: var(--fg-muted);
-  margin-left: 4px;
-  font-weight: 500;
-}
-.cards-stock-days {
-  font-size: 12px;
-  color: var(--fg-muted);
-  margin: 0;
-}
-
 .cards-section-title {
   display: flex;
   align-items: center;
@@ -56,116 +14,65 @@
   margin: 0 0 16px;
 }
 
-.cards-pick-grid {
+.cards-redeem-form {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr auto;
   gap: 10px;
-  margin-bottom: 18px;
+  align-items: end;
 }
-.cards-pick {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 14px;
-  border-radius: 16px;
-  background: var(--bg-soft);
-  border: 1.5px solid var(--border-soft);
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.16s var(--ease-pop);
-  -webkit-tap-highlight-color: transparent;
-  font-family: var(--font-body);
+@media (max-width: 600px) {
+  .cards-redeem-form {
+    grid-template-columns: 1fr;
+  }
 }
-.cards-pick:active { transform: scale(0.97); }
-.cards-pick-active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.cards-pick-label {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--fg);
-}
-.cards-pick-days {
-  font-size: 13px;
-  color: var(--accent-strong);
-  font-weight: 600;
-}
-.cards-pick-hint {
-  font-size: 11px;
-  color: var(--fg-muted);
+.cards-redeem-btn {
+  height: 44px;
 }
 
-.cards-purchase-row {
+.cards-redeem-result {
   display: flex;
   align-items: center;
   gap: 14px;
-  flex-wrap: wrap;
-}
-.cards-member-info {
-  font-size: 13px;
-  color: var(--fg-muted);
-}
-
-/* 兑换结果 + 大葱 drop */
-.cards-result {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-top: 22px;
-  padding: 20px;
-  border-radius: 18px;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border-radius: 16px;
   background: var(--accent-soft);
   border: 1px solid var(--color-miku-200);
 }
-.cards-leek-drop {
+.cards-redeem-check {
   display: grid;
   place-items: center;
-  width: 76px;
-  height: 76px;
-  border-radius: 22px;
-  background: var(--bg-card);
-  box-shadow: var(--shadow-md);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
   flex-shrink: 0;
-  animation: leek-drop 0.7s var(--ease-pop) both;
 }
-.cards-result-body {
+.cards-redeem-body {
   flex: 1;
   min-width: 0;
 }
-.cards-result-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent-strong);
-  margin: 0 0 6px;
-}
-.cards-result-code {
-  display: block;
+.cards-redeem-label {
   font-family: var(--font-display);
-  font-size: 22px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 15px;
   color: var(--fg);
-  background: var(--bg-card);
-  padding: 8px 14px;
-  border-radius: 12px;
-  border: 1px dashed var(--border);
-  word-break: break-all;
+  margin: 0;
 }
-.cards-result-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-.cards-result-until {
+.cards-redeem-until {
   font-size: 12px;
   color: var(--fg-muted);
+  margin: 4px 0 0;
 }
 
-/* 明文列表 */
+/* 明文列表 (staff) */
+.cards-codes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
 .cards-codes-tabs {
   margin-bottom: 14px;
 }
@@ -194,6 +101,10 @@
   border-radius: 12px;
   background: var(--bg-soft);
   border: 1px solid var(--border-soft);
+  transition: background-color 200ms ease;
+}
+.cards-code-row:hover {
+  background: var(--bg-card);
 }
 .cards-code-hash {
   color: var(--fg-muted);
@@ -213,8 +124,5 @@
 }
 
 @media (max-width: 700px) {
-  .cards-stock-grid { grid-template-columns: 1fr; }
-  .cards-pick-grid { grid-template-columns: 1fr; }
-  .cards-result { flex-direction: column; text-align: center; }
-  .cards-result-code { font-size: 18px; }
+  .cards-redeem-result { flex-direction: column; text-align: center; }
 }

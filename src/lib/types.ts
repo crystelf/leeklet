@@ -51,17 +51,14 @@ export interface CardsAvailableOne {
   ok: true;
   count: number;
 }
-export interface CardPurchaseReq {
-  kind: CardKind;
-}
-export interface CardPurchaseRes {
-  ok: true;
+export interface CardRedeemReq {
   code: string;
+}
+export interface CardRedeemRes {
+  ok: true;
   kind: CardKind;
   days: number;
-  consumed: boolean;
-  memberUntil?: number;
-  note?: string;
+  memberUntil: number;
 }
 export interface CardCodesReq {
   kind: CardKind;
@@ -228,18 +225,44 @@ export interface InviteReviewRes {
 }
 
 export type FeedbackStatus = "open" | "resolved" | "closed" | "reopened";
+
+export interface FeedbackAttachmentRef {
+  id: number;
+  fileName: string;
+  sizeBytes: number;
+  mimeType: string;
+}
+
 export interface Feedback {
   id: number;
   userQq: number;
   content: string;
   images: string[];
+  attachments: FeedbackAttachmentRef[];
   status: FeedbackStatus;
   createdAt: number;
   updatedAt: number;
 }
 export interface FeedbackCreateReq {
   content: string;
-  images?: string[];
+  attachmentIds?: number[];
+}
+
+export interface FeedbackUploadRes {
+  ok: true;
+  id: number;
+  fileName: string;
+  sizeBytes: number;
+  mimeType: string;
+}
+
+
+export interface FeedbackUploadRes {
+  ok: true;
+  id: number;
+  fileName: string;
+  sizeBytes: number;
+  mimeType: string;
 }
 export interface FeedbackListRes {
   ok: true;

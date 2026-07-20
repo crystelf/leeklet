@@ -271,6 +271,7 @@
   inset: 0;
   background: rgb(7 42 40 / 0.4);
   backdrop-filter: blur(4px);
+  z-index: 95;
   z-index: 80;
   opacity: 0;
   animation: backdrop-in 0.2s ease forwards;
@@ -282,7 +283,7 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 81;
+  z-index: 96;
   transform: translate(-50%, -50%) scale(0.95);
   opacity: 0;
   width: min(92vw, 440px);

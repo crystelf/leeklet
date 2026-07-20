@@ -57,8 +57,12 @@ function ControlPageInner() {
   const { user } = useAuth();
   const params = useSearchParams();
   const router = useRouter();
-  const { data: managed } = useFetch<GroupsManagedRes>(
+  const { data: allManaged } = useFetch<GroupsManagedRes>(
     user ? `/groups/managed?qq=${user.qq}` : null
+  );
+  const managed = useMemo(
+    () => allManaged?.filter((g) => g.claimed) ?? [],
+    [allManaged]
   );
 
   const initialGroup = params.get("groupId");
@@ -67,13 +71,13 @@ function ControlPageInner() {
   );
 
   useEffect(() => {
-    if (!selected && managed?.length) {
+    if (!selected && managed.length) {
       setSelected(managed[0]?.groupId ?? null);
     }
   }, [managed, selected]);
 
   const selectedGroup = useMemo(
-    () => managed?.find((g) => g.groupId === selected) ?? null,
+    () => managed.find((g) => g.groupId === selected) ?? null,
     [managed, selected]
   );
 

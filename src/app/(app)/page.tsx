@@ -124,7 +124,7 @@ export default function DashboardPage() {
 
       {/* 卡密余量 */}
       <h3 className="dash-section-title">卡密余量</h3>
-      <div className="dash-cards-grid">
+      <div className="dash-cards-grid stagger">
         {loading ? (
           <Card soft className="dash-card-loading">
             <Spinner />
@@ -165,7 +165,7 @@ export default function DashboardPage() {
 
       {/* 快捷入口 */}
       <h3 className="dash-section-title">快捷入口</h3>
-      <div className="dash-quick-grid">
+      <div className="dash-quick-grid stagger">
         <QuickLink href="/cards" icon={<Ticket size={20} />} title="兑换卡密" hint="消费一张卡密延长会员" />
         <QuickLink href="/groups" icon={<Users size={20} />} title="认领群" hint="激活群会员状态" />
         <QuickLink href="/feedback" icon={<MessageSquare size={20} />} title="提交反馈" hint="报告问题或建议" />

@@ -1,7 +1,19 @@
 .groups-loading {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-height: 320px;
   padding: 60px;
+  text-align: center;
+}
+.groups-loading .letter-loader {
+  margin-left: 20px;
+}
+.groups-loading-text {
+  font-size: 14px;
+  color: var(--fg-muted);
 }
 .groups-error {
   color: var(--color-miku-pink-500);

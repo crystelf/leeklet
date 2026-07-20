@@ -177,6 +177,16 @@
   animation: spin-slow 0.7s linear infinite;
 }
 
+.btn-loader {
+  border: none;
+  background: transparent;
+  --ll-letter: currentColor;
+  --ll-bg: transparent;
+}
+.btn-loader .ll-sr-only {
+  display: none;
+}
+
 /* ============ Empty ============ */
 .empty {
   display: flex;

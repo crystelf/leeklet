@@ -20,7 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { LeekLogo } from "@/components/shell/leek-logo";
 import { PageHeader } from "@/components/shell/page-header";
 import "./about.css";
-import "./about.css";
 
 const STACK = [
   "React 19",
@@ -64,9 +63,6 @@ export default function AboutPage() {
           />
           <div className="about-hero-overlay" />
           <div className="about-hero-content">
-            <span className="about-hero-leek animate-float">
-              <LeekLogo size={64} />
-            </span>
             <h2 className="about-hero-title">Leeklet</h2>
             <p className="about-hero-sub">初音未来主题 · 大葱管理后台</p>
             <p className="about-hero-desc">

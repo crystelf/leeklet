@@ -304,6 +304,11 @@
     border-bottom: 1px solid var(--border-soft);
     backdrop-filter: blur(12px);
   }
+  .app-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
   .app-content {
     padding: 20px 16px 96px;
   }

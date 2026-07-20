@@ -93,4 +93,4 @@ export function visibleNav(role: Role | undefined): NavItem[] {
 }
 
 /** 移动端底部固定展示的5项（最常用） */
-export const MOBILE_PRIMARY = ["/", "/cards", "/groups", "/feedback", "/about"];
+export const MOBILE_PRIMARY = ["/groups", "/control", "/invites", "/feedback", "/about"];

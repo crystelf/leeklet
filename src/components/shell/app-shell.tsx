@@ -7,6 +7,7 @@ import { LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { LetterLoader } from "@/components/ui/letter-loader";
 import {
   AnnouncementProvider,
   AnnouncementBell,
@@ -106,8 +107,10 @@ function MobileTopbar({ onMenu }: { onMenu: () => void }) {
           Leeklet
         </span>
       </Link>
-      <AnnouncementBell size={40} />
-      <ThemeToggle size={40} />
+      <div className="app-topbar-actions">
+        <AnnouncementBell size={40} />
+        <ThemeToggle size={40} />
+      </div>
     </header>
   );
 }
@@ -204,7 +207,7 @@ function UserCard() {
   if (loading || !user) {
     return (
       <div className="app-usercard" style={{ minHeight: 56 }}>
-        <span className="spinner" />
+        <LetterLoader size="sm" />
       </div>
     );
   }

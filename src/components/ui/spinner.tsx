@@ -1,15 +1,22 @@
-import { cn } from "@/lib/cn";
-import "./ui.css";
+import { LetterLoader } from "./letter-loader";
 
-export function Spinner({ className }: { className?: string }) {
-  return <span className={cn("spinner", className)} aria-hidden="true" />;
+export function Spinner({
+  className,
+  size = "md",
+}: {
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}) {
+  return <LetterLoader size={size} className={className} />;
 }
 
 export function LoadingScreen({ label = "加载中" }: { label?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16">
-      <Spinner />
-      <p className="text-sm" style={{ color: "var(--fg-muted)" }}>{label}…</p>
+    <div className="flex flex-col items-center justify-center gap-4 py-16">
+      <LetterLoader size="lg" label={label} />
+      <p className="text-sm" style={{ color: "var(--fg-muted)" }}>
+        {label}…
+      </p>
     </div>
   );
 }

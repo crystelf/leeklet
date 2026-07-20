@@ -49,7 +49,10 @@ export default function GroupsPage() {
       />
 
       {loading ? (
-        <div className="groups-loading"><Spinner /></div>
+        <div className="groups-loading">
+          <Spinner />
+          <p className="groups-loading-text">正在检索全部群聊</p>
+        </div>
       ) : error ? (
         <Card soft><CardBody><p className="groups-error">{error}</p></CardBody></Card>
       ) : !data || data.length === 0 ? (

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { LetterLoader } from "./letter-loader";
 import "./ui.css";
 
 type Variant = "primary" | "outline" | "ghost" | "danger" | "soft";
@@ -25,7 +26,7 @@ export function Button({
       disabled={disabled || loading}
       {...rest}
     >
-      {loading && <span className="spinner" aria-hidden="true" />}
+      {loading && <LetterLoader size="sm" className="btn-loader" label="" />}
       {children}
     </button>
   );

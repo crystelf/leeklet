@@ -248,6 +248,17 @@ export interface FeedbackCreateReq {
   attachmentIds?: number[];
 }
 
+export interface FeedbackCommentReq {
+  feedbackId: number;
+  content: string;
+  attachmentIds?: number[];
+}
+
+export interface FeedbackAvatarUrl {
+  qq: number;
+  url: string;
+}
+
 export interface FeedbackUploadRes {
   ok: true;
   id: number;
@@ -273,7 +284,9 @@ export interface FeedbackComment {
   feedbackId: number;
   authorQq: number;
   authorRole: Role;
+  nickname: string | null;
   content: string;
+  attachments: FeedbackAttachmentRef[];
   isStaff: boolean;
   createdAt: number;
 }
@@ -304,6 +317,109 @@ export interface AdminModifyRes {
   added: boolean;
   internals?: number[];
   admins?: number[];
+}
+
+// ===== 订阅 / 兑换记录 =====
+export interface CardRedeem {
+  id: number;
+  qq: number;
+  code: string;
+  kind: CardKind;
+  days: number;
+  beforeMemberUntil: number | null;
+  afterMemberUntil: number;
+  createdAt: number;
+  nickname: string | null;
+}
+export interface SubscriptionsRedeemsRes {
+  ok: true;
+  redeems: CardRedeem[];
+}
+export interface SubscriptionMember {
+  qq: number;
+  nickname: string | null;
+  role: Role;
+  memberUntil: number | null;
+  createdAt: number;
+}
+export interface SubscriptionsMembersRes {
+  ok: true;
+  members: SubscriptionMember[];
+}
+export interface SetMembershipReq {
+  qq: number;
+  memberUntil: number | null;
+}
+export interface SetMembershipRes {
+  ok: true;
+  qq: number;
+  memberUntil: number | null;
+}
+
+// ===== 公告 =====
+export type AnnouncementStatus = "draft" | "published" | "archived";
+
+export interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  status: AnnouncementStatus;
+  visible: boolean;
+  authorQq: number;
+  authorRole: Role;
+  authorNickname: string | null;
+  scheduledAt: number | null;
+  createdAt: number;
+  updatedAt: number;
+}
+export interface AnnouncementComment {
+  id: number;
+  announcementId: number;
+  authorQq: number;
+  authorRole: Role;
+  authorNickname: string | null;
+  content: string;
+  isStaff: boolean;
+  createdAt: number;
+}
+export interface AnnouncementListRes {
+  ok: true;
+  announcements: Announcement[];
+}
+export type AnnouncementUnreadRes = AnnouncementListRes;
+export type AnnouncementManageListRes = AnnouncementListRes;
+export interface AnnouncementDetailRes {
+  ok: true;
+  announcement: Announcement;
+  comments: AnnouncementComment[];
+}
+export interface AnnouncementCommentsRes {
+  ok: true;
+  comments: AnnouncementComment[];
+}
+export interface AnnouncementOkRes { ok: true }
+export interface AnnouncementCommentRes { ok: true; commentId: number }
+export interface AnnouncementIdRes { ok: true; id: number }
+export interface AnnouncementVisibleRes { ok: true; id: number; visible: boolean }
+export interface CreateAnnouncementReq {
+  title: string;
+  content: string;
+  status?: AnnouncementStatus;
+  visible?: boolean;
+  scheduledAt?: number | null;
+}
+export interface UpdateAnnouncementReq {
+  title?: string;
+  content?: string;
+  status?: AnnouncementStatus;
+  visible?: boolean;
+  scheduledAt?: number | null;
+}
+export interface SetAnnouncementVisibleReq {
+  visible: boolean;
+}
+export interface AnnouncementCommentReq {
+  content: string;
 }
 
 export type ApiResult<T> = T | ApiError;

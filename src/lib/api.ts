@@ -95,6 +95,9 @@ export const api = {
     apiFetch<T>(path, { query }),
   post: <T>(path: string, body?: unknown) =>
     apiFetch<T>(path, { method: "POST", body }),
+  patch: <T>(path: string, body?: unknown) =>
+    apiFetch<T>(path, { method: "PATCH", body }),
+  delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
 };
 
 /** 服务端调用，需透传 cookie */

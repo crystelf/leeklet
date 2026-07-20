@@ -7,6 +7,10 @@ import { LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import {
+  AnnouncementProvider,
+  AnnouncementBell,
+} from "@/components/announcements/announcement-provider";
 import { LeekLogoWord, LeekLogo } from "./leek-logo";
 import { visibleNav, MOBILE_PRIMARY } from "./nav-config";
 import { remainingDays, roleLabel } from "@/lib/format";
@@ -21,17 +25,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="app-shell">
-      <DesktopSidebar pathname={pathname} />
-      <MobileTopbar onMenu={() => setDrawerOpen(true)} />
-      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} pathname={pathname} />
-      <main className="app-main">
-        <div key={pathname} className="app-content stagger">
-          {children}
-        </div>
-      </main>
-      <MobileBottomNav pathname={pathname} />
-    </div>
+    <AnnouncementProvider>
+      <div className="app-shell">
+        <DesktopSidebar pathname={pathname} />
+        <MobileTopbar onMenu={() => setDrawerOpen(true)} />
+        <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} pathname={pathname} />
+        <main className="app-main">
+          <div key={pathname} className="app-content stagger">
+            {children}
+          </div>
+        </main>
+        <MobileBottomNav pathname={pathname} />
+      </div>
+    </AnnouncementProvider>
   );
 }
 
@@ -67,6 +73,7 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
         <UserCard />
         <div className="app-sidebar-toggle">
           <ThemeToggle size={48} />
+          <AnnouncementBell size={48} />
         </div>
         <button
           type="button"
@@ -99,6 +106,7 @@ function MobileTopbar({ onMenu }: { onMenu: () => void }) {
           Leeklet
         </span>
       </Link>
+      <AnnouncementBell size={40} />
       <ThemeToggle size={40} />
     </header>
   );

@@ -13,21 +13,41 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { api, ApiRequestError } from "@/lib/api";
-import type { CardsAvailable } from "@/lib/types";
+import type { CardKind, CardsAvailable } from "@/lib/types";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RoleBadge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/shell/page-header";
-import { roleLabel, remainingDays, formatMs } from "@/lib/format";
+import { isAdmin, roleLabel, remainingDays, formatMs } from "@/lib/format";
 import "./dashboard.css";
+
+const CARD_OPTIONS = [
+  { k: "month" as const, label: "月卡", days: 30 },
+  { k: "quarter" as const, label: "季卡", days: 90 },
+  { k: "year" as const, label: "年卡", days: 365 },
+];
+
+// 购买链接占位：填入后对应卡片按钮跳转外部购买页，留空则显示「暂未开放」
+const PURCHASE_LINKS: Record<CardKind, string> = {
+  month: "",
+  quarter: "",
+  year: "",
+};
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [cards, setCards] = useState<CardsAvailable | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const admin = !!user && isAdmin(user.role);
+
   useEffect(() => {
+    if (!admin) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     let alive = true;
     api
       .get<CardsAvailable>("/cards/available")
@@ -39,7 +59,7 @@ export default function DashboardPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [admin]);
 
   if (!user) return null;
 
@@ -122,44 +142,72 @@ export default function DashboardPage() {
         </div>
       </Card>
 
-      {/* 卡密余量 */}
-      <h3 className="dash-section-title">卡密余量</h3>
+      {/* 卡密：admin 看库存余量，其他角色看购买入口 */}
+      <h3 className="dash-section-title">{admin ? "卡密余量" : "卡密购买"}</h3>
       <div className="dash-cards-grid stagger">
-        {loading ? (
-          <Card soft className="dash-card-loading">
-            <Spinner />
-          </Card>
-        ) : cards ? (
-          ([
-            { k: "month", label: "月卡", days: 30 },
-            { k: "quarter", label: "季卡", days: 90 },
-            { k: "year", label: "年卡", days: 365 },
-          ] as const).map((item) => (
-            <Card key={item.k} className="dash-stock-card">
-              <CardBody>
-                <div className="dash-stock-top">
-                  <Ticket size={18} />
-                  <span>{item.label}</span>
-                </div>
-                <div className="dash-stock-num">
-                  {cards[item.k as keyof CardsAvailable] ?? 0}
-                  <span className="dash-stock-unit">张</span>
-                </div>
-                <p className="dash-stock-days">有效期 {item.days} 天</p>
-                <Link href="/cards">
-                  <Button variant="soft" size="sm" className="w-full mt-3">
-                    去兑换
-                  </Button>
-                </Link>
-              </CardBody>
+        {admin ? (
+          loading ? (
+            <Card soft className="dash-card-loading">
+              <Spinner />
             </Card>
-          ))
+          ) : cards ? (
+            CARD_OPTIONS.map((item) => (
+              <Card key={item.k} className="dash-stock-card">
+                <CardBody>
+                  <div className="dash-stock-top">
+                    <Ticket size={18} />
+                    <span>{item.label}</span>
+                  </div>
+                  <div className="dash-stock-num">
+                    {cards[item.k] ?? 0}
+                    <span className="dash-stock-unit">张</span>
+                  </div>
+                  <p className="dash-stock-days">有效期 {item.days} 天</p>
+                  <Link href="/cards">
+                    <Button variant="soft" size="sm" className="w-full mt-3">
+                      去兑换
+                    </Button>
+                  </Link>
+                </CardBody>
+              </Card>
+            ))
+          ) : (
+            <Card soft className="dash-card-loading">
+              <span className="text-sm" style={{ color: "var(--fg-muted)" }}>
+                无法加载余量
+              </span>
+            </Card>
+          )
         ) : (
-          <Card soft className="dash-card-loading">
-            <span className="text-sm" style={{ color: "var(--fg-muted)" }}>
-              无法加载余量
-            </span>
-          </Card>
+          CARD_OPTIONS.map((item) => {
+            const link = PURCHASE_LINKS[item.k];
+            return (
+              <Card key={item.k} className="dash-stock-card">
+                <CardBody>
+                  <div className="dash-stock-top">
+                    <Ticket size={18} />
+                    <span>{item.label}</span>
+                  </div>
+                  <div className="dash-stock-num">
+                    {item.days}
+                    <span className="dash-stock-unit">天</span>
+                  </div>
+                  <p className="dash-stock-days">购买后发放对应卡密</p>
+                  {link ? (
+                    <a href={link} target="_blank" rel="noreferrer" className="block">
+                      <Button variant="soft" size="sm" className="w-full mt-3">
+                        立即购买
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button variant="soft" size="sm" className="w-full mt-3" disabled>
+                      暂未开放
+                    </Button>
+                  )}
+                </CardBody>
+              </Card>
+            );
+          })
         )}
       </div>
 

@@ -5,8 +5,10 @@ import {
   Users,
   SlidersHorizontal,
   MailCheck,
+  Megaphone,
   MessageSquare,
   Shield,
+  Receipt,
   Info,
 } from "lucide-react";
 import type { Role } from "@/lib/types";
@@ -56,6 +58,20 @@ export const NAV_ITEMS: NavItem[] = [
     label: "反馈",
     icon: MessageSquare,
     description: "提交与跟踪反馈",
+  },
+  {
+    href: "/subscriptions",
+    label: "订阅",
+    icon: Receipt,
+    need: "internal",
+    description: "会员订阅与兑换记录",
+  },
+  {
+    href: "/announcements/manage",
+    label: "公告管理",
+    icon: Megaphone,
+    need: "internal",
+    description: "发布与管理公告",
   },
   {
     href: "/admin",

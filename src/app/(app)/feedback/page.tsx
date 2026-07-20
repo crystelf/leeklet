@@ -9,6 +9,8 @@ import {
   X,
   RefreshCw,
   MessagesSquare,
+  ImageIcon,
+  Download,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { api, ApiRequestError } from "@/lib/api";
@@ -17,6 +19,7 @@ import type {
   FeedbackDetailRes,
   Feedback,
   FeedbackAttachmentRef,
+  FeedbackComment,
   FeedbackStatus,
   FeedbackUploadRes,
 } from "@/lib/types";
@@ -159,7 +162,7 @@ function FeedbackRow({ feedback, onOpen }: { feedback: Feedback; onOpen: () => v
         <p className="feedback-row-content">{feedback.content}</p>
         {feedback.images.length > 0 && (
           <p className="feedback-row-imgs">
-            <Images size={12} /> {feedback.images.length} 张图片
+            <ImageIcon size={12} /> {feedback.images.length} 张图片
           </p>
         )}
       </CardBody>
@@ -359,19 +362,103 @@ function FeedbackDetail({
   const staff = isStaff(user?.role);
   const toast = useToast();
   const [comment, setComment] = useState("");
+  const [commentFiles, setCommentFiles] = useState<PendingAttachment[]>([]);
   const [busy, setBusy] = useState(false);
+  const commentFileInputRef = useRef<HTMLInputElement>(null);
 
   const { data, loading, error, reload } = useFetch<FeedbackDetailRes>(
     id ? `/feedback/${id}` : null,
     [id]
   );
 
+  const handleCommentFiles = async (incoming: FileList | null) => {
+    if (!incoming) return;
+    const additions: PendingAttachment[] = [];
+    const overSized: string[] = [];
+    for (const file of Array.from(incoming)) {
+      if (file.size > MAX_FILE_BYTES) {
+        overSized.push(`${file.name}（${formatBytes(file.size)}）`);
+        continue;
+      }
+      additions.push({
+        key: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`,
+        name: file.name,
+        mime: file.type || "application/octet-stream",
+        sizeBytes: file.size,
+      });
+    }
+    if (overSized.length) {
+      toast.error(`${overSized.join("、")} 超过 10MB 限制`);
+    }
+    setCommentFiles((prev) => [...prev, ...additions]);
+
+    for (const add of additions) {
+      const original = Array.from(incoming).find((f) => f.name === add.name && f.size === add.sizeBytes);
+      if (!original) continue;
+      setCommentFiles((prev) =>
+        prev.map((f) => (f.key === add.key ? { ...f, uploading: true } : f)),
+      );
+      try {
+        const base64 = await readFileBase64(original);
+        const res = await api.post<FeedbackUploadRes>("/attachments", {
+          name: add.name,
+          mime: add.mime,
+          base64,
+        });
+        setCommentFiles((prev) =>
+          prev.map((f) =>
+            f.key === add.key
+              ? { ...f, uploadedId: res.id, uploading: false, error: undefined }
+              : f,
+          ),
+        );
+      } catch (err) {
+        setCommentFiles((prev) =>
+          prev.map((f) =>
+            f.key === add.key
+              ? {
+                  ...f,
+                  uploading: false,
+                  error: err instanceof ApiRequestError ? err.body.error : "上传失败",
+                }
+              : f,
+          ),
+        );
+      }
+    }
+  };
+
+  const removeCommentFile = (key: string) => {
+    setCommentFiles((prev) => prev.filter((f) => f.key !== key));
+  };
+
   const addComment = async () => {
-    if (!comment.trim() || !id) return;
+    if (!id) return;
+    if (!comment.trim()) {
+      toast.error("请填写评论内容");
+      return;
+    }
+    if (commentFiles.some((f) => f.uploading)) {
+      toast.error("文件还在上传，请稍候");
+      return;
+    }
+    const failed = commentFiles.filter((f) => f.error);
+    if (failed.length) {
+      toast.error("有文件上传失败，请删除后重试");
+      return;
+    }
     setBusy(true);
     try {
-      await api.post(`/feedback/${id}/comment`, { content: comment.trim() });
+      const attachmentIds = commentFiles
+        .map((f) => f.uploadedId)
+        .filter((id): id is number => typeof id === "number");
+      await api.post(`/feedback/${id}/comment`, {
+        content: comment.trim(),
+        attachmentIds,
+      });
       setComment("");
+      setCommentFiles([]);
+      if (commentFileInputRef.current) commentFileInputRef.current.value = "";
       toast.success("评论已发布");
       void reload();
       onChanged();
@@ -418,12 +505,8 @@ function FeedbackDetail({
             </span>
           </div>
           <p className="feedback-detail-content">{data.feedback.content}</p>
-          {data.feedback.images.length > 0 && (
-            <div className="feedback-detail-imgs">
-              {data.feedback.images.map((src) => (
-                <img key={src} src={src} alt="" className="feedback-detail-img" loading="lazy" />
-              ))}
-            </div>
+          {data.feedback.attachments.length > 0 && (
+            <AttachmentList attachments={data.feedback.attachments} />
           )}
 
           <div className="feedback-detail-actions">
@@ -453,18 +536,9 @@ function FeedbackDetail({
             <MessagesSquare size={14} /> 评论 ({data.comments.length})
           </h4>
           {data.comments.length > 0 ? (
-            <ul className="feedback-comments">
+            <ul className="feedback-comments stagger">
               {data.comments.map((c) => (
-                <li key={c.id} className="feedback-comment">
-                  <div className="feedback-comment-head">
-                    <span className="feedback-comment-author">
-                      {c.authorQq}
-                      {c.isStaff && <Badge variant="internal" className="ml-1.5">staff</Badge>}
-                    </span>
-                    <span className="feedback-comment-time">{formatRelative(c.createdAt)}</span>
-                  </div>
-                  <p className="feedback-comment-text">{c.content}</p>
-                </li>
+                <CommentItem key={c.id} comment={c} />
               ))}
             </ul>
           ) : (
@@ -477,12 +551,129 @@ function FeedbackDetail({
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
-            <Button size="sm" loading={busy} onClick={() => void addComment()} disabled={!comment.trim()}>
+            <div>
+              <input
+                ref={commentFileInputRef}
+                type="file"
+                multiple
+                className="feedback-file-input"
+                onChange={(e) => {
+                  void handleCommentFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              {commentFiles.length > 0 && (
+                <ul className="feedback-file-list">
+                  {commentFiles.map((f) => (
+                    <li
+                      key={f.key}
+                      className={cn(
+                        "feedback-file-row",
+                        f.uploading && "is-uploading",
+                        f.error && "is-error",
+                      )}
+                    >
+                      <Paperclip size={14} className="feedback-file-icon" />
+                      <span className="feedback-file-name">{f.name}</span>
+                      <span className="feedback-file-size">{formatBytes(f.sizeBytes)}</span>
+                      {f.uploading && <span className="feedback-file-status">上传中…</span>}
+                      {f.error && <span className="feedback-file-status is-error">{f.error}</span>}
+                      {f.uploadedId != null && !f.error && (
+                        <span className="feedback-file-status is-ok">已上传</span>
+                      )}
+                      <button
+                        type="button"
+                        className="feedback-file-remove"
+                        onClick={() => removeCommentFile(f.key)}
+                        aria-label={`移除 ${f.name}`}
+                      >
+                        <X size={13} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <Button
+              size="sm"
+              loading={busy}
+              onClick={() => void addComment()}
+              disabled={!comment.trim()}
+            >
               <Reply size={13} /> 发表
             </Button>
           </div>
         </div>
       ) : null}
     </Modal>
+  );
+}
+
+function CommentItem({ comment: c }: { comment: FeedbackComment }) {
+  const display = c.nickname?.trim() || `QQ ${c.authorQq}`;
+  return (
+    <li className="feedback-comment">
+      <div className="feedback-comment-head">
+        <div className="feedback-comment-author">
+          <img
+            className="feedback-comment-avatar"
+            src={`https://q.qlogo.cn/headimg_dl?dst_uin=${c.authorQq}&spec=100`}
+            alt={display}
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
+            }}
+          />
+          <span className="feedback-comment-name">{display}</span>
+          {c.isStaff && <Badge variant="internal" className="ml-1.5">staff</Badge>}
+        </div>
+        <span className="feedback-comment-time">{formatRelative(c.createdAt)}</span>
+      </div>
+      <p className="feedback-comment-text">{c.content}</p>
+      {c.attachments.length > 0 && <AttachmentList attachments={c.attachments} />}
+    </li>
+  );
+}
+
+function AttachmentList({ attachments }: { attachments: FeedbackAttachmentRef[] }) {
+  return (
+    <div className="feedback-attachments">
+      {attachments.map((a) => {
+        const isImage = a.mimeType.startsWith("image/");
+        const url = `/api/attachments/${a.id}`;
+        return (
+          <div key={a.id} className="feedback-attachment">
+            {isImage ? (
+              <a href={url} target="_blank" rel="noreferrer" className="feedback-attachment-img-link">
+                <img
+                  className="feedback-attachment-img"
+                  src={url}
+                  alt={a.fileName}
+                  loading="lazy"
+                />
+              </a>
+            ) : (
+              <a
+                href={url}
+                download={a.fileName}
+                className="feedback-attachment-file"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span className="feedback-attachment-file-icon">
+                  {a.mimeType.startsWith("application/zip") ? (
+                    <Download size={14} />
+                  ) : (
+                    <ImageIcon size={14} />
+                  )}
+                </span>
+                <span className="feedback-attachment-name">{a.fileName}</span>
+                <span className="feedback-attachment-size">{formatBytes(a.sizeBytes)}</span>
+              </a>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }

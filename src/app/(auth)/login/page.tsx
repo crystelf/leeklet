@@ -115,7 +115,7 @@ export default function LoginPage() {
       {/* 左上角 Leeklet 标题（无图标、无星星、不浮动、背后无遮挡） */}
       <div className="login-brand">
         <h1 className="login-brand-title">Leeklet</h1>
-        <p className="login-brand-sub">大葱管理后台 · 初音未来主题</p>
+        <p className="login-brand-sub">葱晶灵管理后台</p>
       </div>
 
       {/* 右侧液态玻璃面板 */}

@@ -13,15 +13,17 @@
   0% { transform: scale(1) translate(0, 0); }
   100% { transform: scale(1.08) translate(-1%, -2%); }
 }
+@keyframes ken-burns-mobile {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.06) translate(-2%, -1%); }
+}
 
-/* 手机/平板：背景显示右侧（Miku 主体所在区域） */
+/* 手机/平板：背景显示右侧（Miku 主体所在区域），用独立 keyframes 避免
+   @media 内重定义同名 @keyframes 在移动端浏览器失效 */
 @media (max-width: 900px) {
   .login-bg {
     object-position: right center;
-  }
-  @keyframes ken-burns {
-    0% { transform: scale(1) translate(0, 0); }
-    100% { transform: scale(1.06) translate(-2%, -1%); }
+    animation-name: ken-burns-mobile;
   }
 }
 
@@ -38,7 +40,7 @@
   color: #fff;
 }
 .login-brand-title {
-  font-family: var(--font-display);
+  font-family: var(--font-display),;
   font-size: clamp(40px, 5vw, 64px);
   font-weight: 700;
   letter-spacing: -0.02em;

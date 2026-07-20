@@ -186,6 +186,29 @@ export interface AiControlRes {
   value: boolean;
 }
 
+export interface SkillInfo {
+  name: string;
+  description: string;
+  permission: "owner" | "admin" | "member";
+  toolCount: number;
+}
+export type SkillsListRes = SkillInfo[];
+export interface GroupSkillsState {
+  globalAllowed: string[];
+  groupAllowed: string[];
+  effective: string[];
+  isOverridden: boolean;
+}
+export interface SetSkillsReq {
+  groupId: number;
+  allowedExternalSkills: string[] | null;
+}
+export interface SetSkillsRes {
+  ok: true;
+  groupId: number;
+  allowedExternalSkills: string[] | null;
+}
+
 export interface InviteReq {
   groupId: number;
   topic: string;

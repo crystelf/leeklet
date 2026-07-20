@@ -9,6 +9,7 @@ import {
   ToggleRight,
   Power,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { api, ApiRequestError } from "@/lib/api";
@@ -18,6 +19,8 @@ import type {
   FeaturesAccessHooksRes,
   AiControlState,
   AiField,
+  SkillsListRes,
+  GroupSkillsState,
 } from "@/lib/types";
 import { Card, CardBody } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -41,13 +44,23 @@ const AI_FIELDS: { field: AiField; label: string; hint: string }[] = [
   { field: "searxng", label: "网页搜索", hint: "SearXNG 搜索" },
   { field: "webReader", label: "网页阅读", hint: "读取网页内容" },
   { field: "dynamicDelay", label: "动态延迟", hint: "模拟人类回复节奏" },
-  { field: "enableMarkdownScreenshot", label: "Markdown 截图", hint: "长消息截图渲染" },
+  {
+    field: "enableMarkdownScreenshot",
+    label: "Markdown 截图",
+    hint: "长消息截图渲染",
+  },
   { field: "enableMediaRecognition", label: "媒体识别", hint: "识别图片/视频" },
 ];
 
 export default function ControlPage() {
   return (
-    <Suspense fallback={<div className="control-loading"><Spinner /></div>}>
+    <Suspense
+      fallback={
+        <div className="control-loading">
+          <Spinner />
+        </div>
+      }
+    >
       <ControlPageInner />
     </Suspense>
   );
@@ -58,16 +71,16 @@ function ControlPageInner() {
   const params = useSearchParams();
   const router = useRouter();
   const { data: allManaged } = useFetch<GroupsManagedRes>(
-    user ? `/groups/managed?qq=${user.qq}` : null
+    user ? `/groups/managed?qq=${user.qq}` : null,
   );
   const managed = useMemo(
     () => allManaged?.filter((g) => g.claimed) ?? [],
-    [allManaged]
+    [allManaged],
   );
 
   const initialGroup = params.get("groupId");
   const [selected, setSelected] = useState<number | null>(
-    initialGroup ? Number(initialGroup) : null
+    initialGroup ? Number(initialGroup) : null,
   );
 
   useEffect(() => {
@@ -78,7 +91,7 @@ function ControlPageInner() {
 
   const selectedGroup = useMemo(
     () => managed.find((g) => g.groupId === selected) ?? null,
-    [managed, selected]
+    [managed, selected],
   );
 
   return (
@@ -101,22 +114,33 @@ function ControlPageInner() {
                   className={`control-group-chip ${selected === g.groupId ? "control-group-chip-active" : ""}`}
                   onClick={() => {
                     setSelected(g.groupId);
-                    router.replace(`/control?groupId=${g.groupId}`, { scroll: false });
+                    router.replace(`/control?groupId=${g.groupId}`, {
+                      scroll: false,
+                    });
                   }}
                 >
                   <img
                     src={g.groupAvatar}
                     alt=""
                     className="control-chip-avatar"
-                    onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")}
+                    onError={(e) =>
+                      ((e.currentTarget as HTMLImageElement).style.visibility =
+                        "hidden")
+                    }
                   />
-                  <span className="control-chip-name">{g.groupName || g.groupId}</span>
+                  <span className="control-chip-name">
+                    {g.groupName || g.groupId}
+                  </span>
                 </button>
               ))}
             </div>
           ) : (
             <p className="text-sm" style={{ color: "var(--fg-muted)" }}>
-              暂无可管理的群，请先到 <a href="/groups" style={{ color: "var(--accent)" }}>群管理</a> 认领。
+              暂无可管理的群，请先到{" "}
+              <a href="/groups" style={{ color: "var(--accent)" }}>
+                群管理
+              </a>{" "}
+              认领。
             </p>
           )}
         </CardBody>
@@ -127,15 +151,26 @@ function ControlPageInner() {
           <BotSection groupId={selected} initial={selectedGroup.botEnabled} />
           <AccessHookSection groupId={selected} />
           <AiControlSection groupId={selected} />
+          <SkillSection groupId={selected} />
         </div>
       ) : managed?.length === 0 ? (
-        <Empty icon={SlidersHorizontal} title="没有可控制的群" hint="认领群后即可在此管理 bot 与 AI 开关" />
+        <Empty
+          icon={SlidersHorizontal}
+          title="没有可控制的群"
+          hint="认领群后即可在此管理 bot 与 AI 开关"
+        />
       ) : null}
     </>
   );
 }
 
-function BotSection({ groupId, initial }: { groupId: number; initial: boolean }) {
+function BotSection({
+  groupId,
+  initial,
+}: {
+  groupId: number;
+  initial: boolean;
+}) {
   const toast = useToast();
   const [enabled, setEnabled] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -158,12 +193,21 @@ function BotSection({ groupId, initial }: { groupId: number; initial: boolean })
     <Card className="mb-4">
       <CardBody>
         <div className="control-section-head">
-          <span className="control-section-icon"><Bot size={18} /></span>
+          <span className="control-section-icon">
+            <Bot size={18} />
+          </span>
           <div>
             <h3 className="control-section-title">Bot 总开关</h3>
-            <p className="control-section-sub">关闭后 bot 不再响应该群任何消息</p>
+            <p className="control-section-sub">
+              关闭后 bot 不再响应该群任何消息
+            </p>
           </div>
-          <Switch checked={enabled} disabled={busy} onChange={toggle} ariaLabel="Bot 总开关" />
+          <Switch
+            checked={enabled}
+            disabled={busy}
+            onChange={toggle}
+            ariaLabel="Bot 总开关"
+          />
         </div>
       </CardBody>
     </Card>
@@ -171,24 +215,42 @@ function BotSection({ groupId, initial }: { groupId: number; initial: boolean })
 }
 
 function AccessHookSection({ groupId }: { groupId: number }) {
-  const { data: hooksRes, loading } = useFetch<FeaturesAccessHooksRes>("/features/access-hooks");
-  const { data: detail } = useFetch<GroupDetailRes>(`/groups/detail?groupId=${groupId}`, [groupId]);
+  const { data: hooksRes, loading } = useFetch<FeaturesAccessHooksRes>(
+    "/features/access-hooks",
+  );
+  const { data: detail } = useFetch<GroupDetailRes>(
+    `/groups/detail?groupId=${groupId}`,
+    [groupId],
+  );
   const toast = useToast();
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
   const overrides = useMemo(() => {
     const map = new Map<string, "allow" | "block">();
-    detail?.accessHooks.forEach((h) => map.set(`${h.plugin}:${h.hookId}`, h.action));
+    detail?.accessHooks.forEach((h) =>
+      map.set(`${h.plugin}:${h.hookId}`, h.action),
+    );
     return map;
   }, [detail]);
 
-  const toggle = async (plugin: string, hookId: string, current: "allow" | "block" | undefined) => {
+  const toggle = async (
+    plugin: string,
+    hookId: string,
+    current: "allow" | "block" | undefined,
+  ) => {
     const action = current === "block" ? "allow" : "block";
     const key = `${plugin}:${hookId}`;
     setBusyKey(key);
     try {
-      await api.post("/bot-control/access-hook", { groupId, plugin, hookId, action });
-      toast.success(action === "block" ? `已屏蔽 ${hookId}` : `已放行 ${hookId}`);
+      await api.post("/bot-control/access-hook", {
+        groupId,
+        plugin,
+        hookId,
+        action,
+      });
+      toast.success(
+        action === "block" ? `已屏蔽 ${hookId}` : `已放行 ${hookId}`,
+      );
     } catch (e) {
       toast.error(e instanceof ApiRequestError ? e.body.error : "操作失败");
     } finally {
@@ -200,15 +262,21 @@ function AccessHookSection({ groupId }: { groupId: number }) {
     <Card className="mb-4">
       <CardBody>
         <div className="control-section-head">
-          <span className="control-section-icon"><ToggleRight size={18} /></span>
+          <span className="control-section-icon">
+            <ToggleRight size={18} />
+          </span>
           <div>
             <h3 className="control-section-title">指令开关</h3>
-            <p className="control-section-sub">屏蔽或放行某插件某指令在本群的执行</p>
+            <p className="control-section-sub">
+              屏蔽或放行某插件某指令在本群的执行
+            </p>
           </div>
         </div>
 
         {loading ? (
-          <div className="control-loading"><Spinner /></div>
+          <div className="control-loading">
+            <Spinner />
+          </div>
         ) : hooksRes?.plugins.length ? (
           <div className="control-hooks-list">
             {hooksRes.plugins.map((p) => (
@@ -228,7 +296,9 @@ function AccessHookSection({ groupId }: { groupId: number }) {
                         <div className="control-hook-info">
                           <span className="control-hook-id">{h.id}</span>
                           {h.description && (
-                            <span className="control-hook-desc">{h.description}</span>
+                            <span className="control-hook-desc">
+                              {h.description}
+                            </span>
                           )}
                         </div>
                         <Switch
@@ -245,7 +315,11 @@ function AccessHookSection({ groupId }: { groupId: number }) {
             ))}
           </div>
         ) : (
-          <Empty icon={ToggleRight} title="暂无指令" hint="没有插件注册 access hook" />
+          <Empty
+            icon={ToggleRight}
+            title="暂无指令"
+            hint="没有插件注册 access hook"
+          />
         )}
       </CardBody>
     </Card>
@@ -255,10 +329,13 @@ function AccessHookSection({ groupId }: { groupId: number }) {
 function AiControlSection({ groupId }: { groupId: number }) {
   const { user } = useAuth();
   const toast = useToast();
-  const { data: state, loading, reload } = useFetch<AiControlState>(
-    `/ai-control/state?groupId=${groupId}`,
-    [groupId]
-  );
+  const {
+    data: state,
+    loading,
+    reload,
+  } = useFetch<AiControlState>(`/ai-control/state?groupId=${groupId}`, [
+    groupId,
+  ]);
   const [busyField, setBusyField] = useState<string | null>(null);
 
   const canEdit = hasRole(user?.role, "member");
@@ -285,17 +362,23 @@ function AiControlSection({ groupId }: { groupId: number }) {
     <Card>
       <CardBody>
         <div className="control-section-head">
-          <span className="control-section-icon"><Cpu size={18} /></span>
+          <span className="control-section-icon">
+            <Cpu size={18} />
+          </span>
           <div>
             <h3 className="control-section-title">AI 控制</h3>
             <p className="control-section-sub">
-              {canEdit ? "覆盖该群 AI 功能开关" : "仅查看，修改需会员及以上身份"}
+              {canEdit
+                ? "覆盖该群 AI 功能开关"
+                : "仅查看，修改需会员及以上身份"}
             </p>
           </div>
         </div>
 
         {loading ? (
-          <div className="control-loading"><Spinner /></div>
+          <div className="control-loading">
+            <Spinner />
+          </div>
         ) : (
           <div className="control-ai-grid">
             {AI_FIELDS.map((f) => {
@@ -320,6 +403,117 @@ function AiControlSection({ groupId }: { groupId: number }) {
         <p className="control-ai-note">
           <Power size={11} /> 未覆盖的字段使用全局默认值
         </p>
+      </CardBody>
+    </Card>
+  );
+}
+
+function SkillSection({ groupId }: { groupId: number }) {
+  const { user } = useAuth();
+  const toast = useToast();
+  const { data: skills, loading: skillsLoading } =
+    useFetch<SkillsListRes>("/ai-control/skills");
+  const {
+    data: skillState,
+    loading: stateLoading,
+    reload,
+  } = useFetch<GroupSkillsState>(
+    `/ai-control/skills/state?groupId=${groupId}`,
+    [groupId],
+  );
+
+  const canEdit = hasRole(user?.role, "member");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!skills || !skillState) return;
+    const effective =
+      skillState.groupAllowed.length > 0
+        ? skillState.groupAllowed
+        : skills.map((s) => s.name);
+    setSelected(new Set(effective));
+  }, [skillState, skills]);
+
+  const toggleSkill = async (name: string) => {
+    if (!canEdit) {
+      toast.error("修改 AI Skill 需要会员及以上身份");
+      return;
+    }
+    const prev = selected;
+    const next = new Set(prev);
+    if (next.has(name)) next.delete(name);
+    else next.add(name);
+    setSelected(next);
+
+    setBusyKey(name);
+    const allChecked = skills && next.size === skills.length;
+    const payload = allChecked ? null : Array.from(next);
+    try {
+      await api.post("/ai-control/skills", {
+        groupId,
+        allowedExternalSkills: payload,
+      });
+      toast.success(prev.has(name) ? `已禁用 ${name}` : `已启用 ${name}`);
+      void reload();
+    } catch (e) {
+      setSelected(prev);
+      toast.error(e instanceof ApiRequestError ? e.body.error : "操作失败");
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  const allOn = skills ? selected.size === skills.length : false;
+
+  return (
+    <Card className="mb-4">
+      <CardBody>
+        <div className="control-section-head">
+          <span className="control-section-icon">
+            <Sparkles size={18} />
+          </span>
+          <div>
+            <h3 className="control-section-title">AI Skills 技能</h3>
+            <p className="control-section-sub">
+              {canEdit
+                ? `勾选本群允许的 AI Skill${allOn ? " · 当前全部启用" : ""}`
+                : "仅查看，修改需会员及以上身份"}
+            </p>
+          </div>
+        </div>
+
+        {stateLoading || skillsLoading ? (
+          <div className="control-loading">
+            <Spinner />
+          </div>
+        ) : !skills || skills.length === 0 ? (
+          <Empty
+            icon={Sparkles}
+            title="暂无可用 Skill"
+            hint="没有插件注册外部 AI Skill"
+          />
+        ) : (
+          <div className="control-ai-grid">
+            {skills.map((s) => {
+              const checked = selected.has(s.name);
+              return (
+                <div key={s.name} className="control-ai-row">
+                  <div className="control-ai-info">
+                    <span className="control-ai-label">{s.name}</span>
+                    <span className="control-ai-hint">{s.description}</span>
+                  </div>
+                  <Switch
+                    checked={checked}
+                    disabled={!canEdit || busyKey === s.name}
+                    onChange={() => void toggleSkill(s.name)}
+                    ariaLabel={s.name}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </CardBody>
     </Card>
   );

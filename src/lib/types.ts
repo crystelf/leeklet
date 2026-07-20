@@ -79,9 +79,6 @@ export interface ManagedGroup {
   groupAvatar: string;
   role: "owner" | "admin";
   claimed: boolean;
-  activated: boolean;
-  activationStart: number | null;
-  activationEnd: number | null;
   botEnabled: boolean;
 }
 export type GroupsManagedRes = ManagedGroup[];
@@ -91,24 +88,13 @@ export interface GroupClaimReq {
   botQqs: number[];
   channel: string;
 }
-export interface GroupActivateReq {
-  groupId: number;
-}
-export interface GroupActivateRes {
-  ok: true;
-  groupId: number;
-  ownerQq: number;
-  startAt: number;
-  endAt: number;
-  activatedAt: number;
-}
 export interface AccessHookEntry {
   plugin: string;
   hookId: string;
   action: "allow" | "block";
 }
 export interface AiControlState {
-  [field: string]: unknown;
+  [field: string]: boolean;
 }
 export interface GroupDetailRes {
   ok: true;
@@ -122,9 +108,6 @@ export interface GroupDetailRes {
   topic?: string;
   botQqs?: number[];
   channel?: string;
-  activated: boolean;
-  activationStart: number | null;
-  activationEnd: number | null;
   botEnabled: boolean;
   accessHooks: AccessHookEntry[];
   aiControl: AiControlState;
@@ -197,13 +180,13 @@ export type AiField =
 export interface AiControlReq {
   groupId: number;
   field: AiField;
-  value: boolean | { enabled: boolean };
+  value: boolean;
 }
 export interface AiControlRes {
   ok: true;
   groupId: number;
   field: AiField;
-  value: boolean | { enabled: boolean };
+  value: boolean;
 }
 
 export interface InviteReq {

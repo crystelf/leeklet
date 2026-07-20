@@ -8,7 +8,6 @@ import {
   Shield,
   CheckCircle2,
   XCircle,
-  Zap,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { api, ApiRequestError } from "@/lib/api";
@@ -22,7 +21,6 @@ import { Modal } from "@/components/ui/modal";
 import { PageHeader } from "@/components/shell/page-header";
 import { useToast } from "@/components/ui/toast";
 import { useFetch } from "@/lib/use-fetch";
-import { hasRole, formatMs, remainingDays } from "@/lib/format";
 import "./groups.css";
 
 export default function GroupsPage() {
@@ -32,48 +30,20 @@ export default function GroupsPage() {
     qq ? `/groups/managed?qq=${qq}` : null,
     [qq]
   );
-  const toast = useToast();
   const [claimOpen, setClaimOpen] = useState(false);
-  const [activating, setActivating] = useState<number | null>(null);
-
-  const canActivate = hasRole(user?.role, "member");
-
-  const activate = async (groupId: number) => {
-    setActivating(groupId);
-    try {
-      await api.post("/groups/activate", { groupId });
-      toast.success("群会员已激活");
-      void reload();
-    } catch (e) {
-      toast.error(e instanceof ApiRequestError ? e.body.error : "激活失败");
-    } finally {
-      setActivating(null);
-    }
-  };
 
   return (
     <>
       <PageHeader
         icon={<Users size={22} />}
         title="群管理"
-        subtitle="认领你管理的群，并激活群会员"
+        subtitle="认领你管理的群，进入功能控制面板"
         actions={
           <Button size="sm" onClick={() => setClaimOpen(true)}>
             <Plus size={14} /> 认领新群
           </Button>
         }
       />
-
-      {!canActivate && (
-        <Card soft className="groups-hint">
-          <CardBody>
-            <p>
-              <Zap size={14} /> 激活群会员需要 <strong>会员</strong> 及以上身份。
-              前往 <a href="/cards" className="groups-hint-link">卡密中心</a> 兑换。
-            </p>
-          </CardBody>
-        </Card>
-      )}
 
       {loading ? (
         <div className="groups-loading"><Spinner /></div>
@@ -82,13 +52,7 @@ export default function GroupsPage() {
       ) : data && data.length > 0 ? (
         <div className="groups-grid">
           {data.map((g) => (
-            <GroupCard
-              key={g.groupId}
-              group={g}
-              canActivate={canActivate}
-              activating={activating === g.groupId}
-              onActivate={() => void activate(g.groupId)}
-            />
+            <GroupCard key={g.groupId} group={g} />
           ))}
         </div>
       ) : (
@@ -116,18 +80,7 @@ export default function GroupsPage() {
   );
 }
 
-function GroupCard({
-  group,
-  canActivate,
-  activating,
-  onActivate,
-}: {
-  group: ManagedGroup;
-  canActivate: boolean;
-  activating: boolean;
-  onActivate: () => void;
-}) {
-  const days = remainingDays(group.activationEnd);
+function GroupCard({ group }: { group: ManagedGroup }) {
   return (
     <Card className="group-card">
       <CardBody>
@@ -154,13 +107,7 @@ function GroupCard({
         <div className="group-card-stats">
           <Stat
             ok={group.claimed}
-            label="已认领"
-            okIcon={<CheckCircle2 size={13} />}
-            noIcon={<XCircle size={13} />}
-          />
-          <Stat
-            ok={group.activated}
-            label={group.activated && days !== null ? `会员剩 ${days}天` : "未激活"}
+            label={group.claimed ? "已认领" : "未认领"}
             okIcon={<CheckCircle2 size={13} />}
             noIcon={<XCircle size={13} />}
           />
@@ -172,23 +119,9 @@ function GroupCard({
           />
         </div>
 
-        {group.activated && group.activationEnd && (
-          <p className="group-card-until">会员到期 {formatMs(group.activationEnd)}</p>
-        )}
-
         <div className="group-card-actions">
-          <Button
-            variant={group.activated ? "outline" : "primary"}
-            size="sm"
-            loading={activating}
-            disabled={!canActivate}
-            onClick={onActivate}
-          >
-            <Zap size={13} />
-            {group.activated ? "续期" : "激活会员"}
-          </Button>
           <a href={`/control?groupId=${group.groupId}`}>
-            <Button variant="ghost" size="sm">
+            <Button variant="primary" size="sm">
               功能控制 →
             </Button>
           </a>

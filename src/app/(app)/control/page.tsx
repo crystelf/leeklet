@@ -30,19 +30,19 @@ import { useFetch } from "@/lib/use-fetch";
 import { hasRole } from "@/lib/format";
 import "./control.css";
 
-const AI_FIELDS: { field: AiField; label: string; nested: boolean; hint: string }[] = [
-  { field: "emoji", label: "表情包", nested: true, hint: "AI 表情包系统" },
-  { field: "expression", label: "表达学习", nested: true, hint: "学习群内表达风格" },
-  { field: "retention", label: "数据清理", nested: true, hint: "自动清理过期数据" },
-  { field: "memory", label: "记忆检索", nested: true, hint: "长期记忆调用" },
-  { field: "topic", label: "话题跟踪", nested: true, hint: "跟踪群内话题" },
-  { field: "planner", label: "动作规划", nested: true, hint: "动作规划器" },
-  { field: "audio", label: "语音消息", nested: true, hint: "AI 发语音" },
-  { field: "searxng", label: "网页搜索", nested: true, hint: "SearXNG 搜索" },
-  { field: "webReader", label: "网页阅读", nested: true, hint: "读取网页内容" },
-  { field: "dynamicDelay", label: "动态延迟", nested: true, hint: "模拟人类回复节奏" },
-  { field: "enableMarkdownScreenshot", label: "Markdown 截图", nested: false, hint: "长消息截图渲染" },
-  { field: "enableMediaRecognition", label: "媒体识别", nested: false, hint: "识别图片/视频" },
+const AI_FIELDS: { field: AiField; label: string; hint: string }[] = [
+  { field: "emoji", label: "表情包", hint: "AI 表情包系统" },
+  { field: "expression", label: "表达学习", hint: "学习群内表达风格" },
+  { field: "retention", label: "数据清理", hint: "自动清理过期数据" },
+  { field: "memory", label: "记忆检索", hint: "长期记忆调用" },
+  { field: "topic", label: "话题跟踪", hint: "跟踪群内话题" },
+  { field: "planner", label: "动作规划", hint: "动作规划器" },
+  { field: "audio", label: "语音消息", hint: "AI 发语音" },
+  { field: "searxng", label: "网页搜索", hint: "SearXNG 搜索" },
+  { field: "webReader", label: "网页阅读", hint: "读取网页内容" },
+  { field: "dynamicDelay", label: "动态延迟", hint: "模拟人类回复节奏" },
+  { field: "enableMarkdownScreenshot", label: "Markdown 截图", hint: "长消息截图渲染" },
+  { field: "enableMediaRecognition", label: "媒体识别", hint: "识别图片/视频" },
 ];
 
 export default function ControlPage() {
@@ -259,14 +259,7 @@ function AiControlSection({ groupId }: { groupId: number }) {
 
   const canEdit = hasRole(user?.role, "member");
 
-  const readValue = (field: AiField, nested: boolean): boolean | undefined => {
-    if (!state) return undefined;
-    const v = state[field];
-    if (nested) return (v as { enabled?: boolean })?.enabled;
-    return v as boolean | undefined;
-  };
-
-  const toggle = async (field: AiField, nested: boolean, current: boolean | undefined) => {
+  const toggle = async (field: AiField, current: boolean) => {
     if (!canEdit) {
       toast.error("修改 AI 控制需要会员及以上身份");
       return;
@@ -274,12 +267,8 @@ function AiControlSection({ groupId }: { groupId: number }) {
     const next = !current;
     setBusyField(field);
     try {
-      await api.post("/ai-control", {
-        groupId,
-        field,
-        value: nested ? { enabled: next } : next,
-      });
-      toast.success(`${field} 已 ${next ? "开启" : "关闭"}`);
+      await api.post("/ai-control", { groupId, field, value: next });
+      toast.success(`${field} 已切换`);
       void reload();
     } catch (e) {
       toast.error(e instanceof ApiRequestError ? e.body.error : "操作失败");
@@ -306,7 +295,7 @@ function AiControlSection({ groupId }: { groupId: number }) {
         ) : (
           <div className="control-ai-grid">
             {AI_FIELDS.map((f) => {
-              const v = readValue(f.field, f.nested);
+              const v = !!state?.[f.field];
               return (
                 <div key={f.field} className="control-ai-row">
                   <div className="control-ai-info">
@@ -314,9 +303,9 @@ function AiControlSection({ groupId }: { groupId: number }) {
                     <span className="control-ai-hint">{f.hint}</span>
                   </div>
                   <Switch
-                    checked={!!v}
+                    checked={v}
                     disabled={!canEdit || busyField === f.field}
-                    onChange={() => void toggle(f.field, f.nested, v)}
+                    onChange={() => void toggle(f.field, v)}
                     ariaLabel={f.label}
                   />
                 </div>

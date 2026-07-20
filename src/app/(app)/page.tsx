@@ -43,9 +43,14 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
+  const isInternalOrAdmin = user.role === "internal" || user.role === "admin";
   const days = remainingDays(user.memberUntil);
-  const memberActive = user.role === "member" || user.role === "internal" || user.role === "admin";
-  const memberPercent = memberActive && days !== null ? Math.min(100, Math.max(2, (days / 365) * 100)) : 0;
+  const memberActive = isInternalOrAdmin || user.role === "member";
+  const memberPercent = isInternalOrAdmin
+    ? 100
+    : memberActive && days !== null
+      ? Math.min(100, Math.max(2, (days / 365) * 100))
+      : 0;
 
   return (
     <>
@@ -87,11 +92,17 @@ export default function DashboardPage() {
               <CalendarClock size={16} />
               <span>会员状态</span>
             </div>
-            {memberActive ? (
+            {isInternalOrAdmin ? (
               <>
-                <div className="dash-member-days">
-                  {days !== null && days > 0 ? `${days} 天` : "已过期"}
+                <div className="dash-member-days">内部会员</div>
+                <div className="dash-progress">
+                  <span style={{ width: "100%" }} />
                 </div>
+                <p className="dash-member-until">永久有效，畅通无阻</p>
+              </>
+            ) : memberActive && days !== null && days > 0 ? (
+              <>
+                <div className="dash-member-days">{`${days} 天`}</div>
                 <div className="dash-progress">
                   <span style={{ width: `${memberPercent}%` }} />
                 </div>

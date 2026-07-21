@@ -289,7 +289,13 @@ const GlassContainer = forwardRef<
     const glassInnerRef = useRef<HTMLDivElement>(null);
     const [contentHeight, setContentHeight] = useState<number | null>(null);
 
-    const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
+    const disableSvgFilter = (() => {
+      if (typeof navigator === "undefined") return false;
+      const ua = navigator.userAgent.toLowerCase();
+      if (ua.includes("firefox")) return true;
+      if (ua.includes("mqqbrowser") || ua.includes("tbs") || ua.includes("micromessenger")) return true;
+      return false;
+    })();
 
     // Generate shader displacement map when in shader mode
     useEffect(() => {
@@ -325,10 +331,20 @@ const GlassContainer = forwardRef<
       return () => ro.disconnect();
     }, [onHeightChange]);
 
-    const backdropStyle = {
-      filter: isFirefox ? null : `url(#${filterId})`,
-      backdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`,
-    };
+    const blurPx = (overLight ? 12 : 4) + blurAmount * 32;
+    const backdropStyle: CSSProperties = disableSvgFilter
+      ? {
+          backdropFilter: `blur(${blurPx}px) saturate(${saturation}%)`,
+          WebkitBackdropFilter: `blur(${blurPx}px) saturate(${saturation}%)`,
+          background: overLight
+            ? "rgba(15, 22, 28, 0.45)"
+            : "rgba(255, 255, 255, 0.18)",
+        }
+      : {
+          filter: `url(#${filterId})`,
+          backdropFilter: `blur(${blurPx}px) saturate(${saturation}%)`,
+          WebkitBackdropFilter: `blur(${blurPx}px) saturate(${saturation}%)`,
+        };
 
     return (
       <div
@@ -337,15 +353,17 @@ const GlassContainer = forwardRef<
         style={style}
         onClick={onClick}
       >
-        <GlassFilter
-          mode={mode}
-          id={filterId}
-          displacementScale={displacementScale}
-          aberrationIntensity={aberrationIntensity}
-          width={glassSize.width}
-          height={glassSize.height}
-          shaderMapUrl={shaderMapUrl}
-        />
+        {!disableSvgFilter && (
+          <GlassFilter
+            mode={mode}
+            id={filterId}
+            displacementScale={displacementScale}
+            aberrationIntensity={aberrationIntensity}
+            width={glassSize.width}
+            height={glassSize.height}
+            shaderMapUrl={shaderMapUrl}
+          />
+        )}
 
         <div
           ref={glassInnerRef}

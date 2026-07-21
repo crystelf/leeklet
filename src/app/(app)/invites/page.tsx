@@ -8,6 +8,8 @@ import {
   CheckCircle2,
   XCircle,
   UserCheck,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { api, ApiRequestError } from "@/lib/api";
@@ -27,7 +29,6 @@ import { PageHeader } from "@/components/shell/page-header";
 import { useToast } from "@/components/ui/toast";
 import { useFetch } from "@/lib/use-fetch";
 import { isStaff, formatRelative } from "@/lib/format";
-import "./invites.css";
 import "./invites.css";
 
 export default function InvitesPage() {
@@ -107,26 +108,99 @@ function statusBadge(s: InviteStatus) {
   );
 }
 
-function InviteCard({ invite }: { invite: Invite }) {
+function UserChip({
+  qq,
+  nickname,
+}: {
+  qq: number;
+  nickname?: string | null;
+}) {
+  const display = nickname?.trim() || "未知用户";
+  return (
+    <span className="invite-user-chip">
+      <img
+        className="invite-avatar"
+        src={`https://q.qlogo.cn/headimg_dl?dst_uin=${qq}&spec=100`}
+        alt={display}
+        loading="lazy"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
+        }}
+      />
+      <span className="invite-user-name">{display}</span>
+    </span>
+  );
+}
+
+function CopyGroupId({ groupId }: { groupId: number }) {
+  const toast = useToast();
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(String(groupId));
+      setCopied(true);
+      toast.success("群号已复制");
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("复制失败");
+    }
+  };
+
+  return (
+    <button type="button" className="invite-copy-btn" onClick={() => void copy()} title="复制群号">
+      群号 {groupId}
+      {copied ? <Check size={12} /> : <Copy size={12} />}
+    </button>
+  );
+}
+
+function InviteCard({
+  invite,
+  showApplicant,
+  onReview,
+}: {
+  invite: Invite;
+  showApplicant?: boolean;
+  onReview?: (iv: Invite) => void;
+}) {
   return (
     <Card className="invite-card">
-      <CardBody>
+      <CardBody className="invite-card-body">
         <div className="invite-card-head">
-          <span className="invite-card-group">{invite.topic}</span>
+          <div className="invite-card-title-wrap">
+            <span className="invite-card-topic">{invite.topic}</span>
+            <span className="invite-card-time">{formatRelative(invite.createdAt)}</span>
+          </div>
           {statusBadge(invite.status)}
         </div>
-        <p className="invite-card-meta">
-          群号 {invite.groupId} · {formatRelative(invite.createdAt)}
-        </p>
+
+        <div className="invite-card-row">
+          <CopyGroupId groupId={invite.groupId} />
+          {showApplicant && (
+            <UserChip qq={invite.applicantQq} nickname={invite.applicantNickname} />
+          )}
+        </div>
+
         <div className="invite-card-tags">
-          <span>渠道：{invite.channel}</span>
+          <span>渠道：{invite.channel || "—"}</span>
           <span>bot {invite.botQqs.length} 个</span>
           <span>{invite.allowBotAdmin ? "允许 bot 管理员" : "禁止 bot 管理员"}</span>
         </div>
-        {invite.reviewReason && (
-          <p className="invite-card-review">
-            审批意见：{invite.reviewReason}
-          </p>
+
+        {invite.status !== "pending" && invite.reviewReason && (
+          <div className="invite-card-review">
+            <span className="invite-card-label">审批意见</span>
+            <p className="invite-card-review-text">{invite.reviewReason}</p>
+          </div>
+        )}
+
+        {invite.status === "pending" && onReview && (
+          <div className="invite-card-footer">
+            <Button size="sm" onClick={() => onReview(invite)}>
+              <UserCheck size={13} /> 去审批
+            </Button>
+          </div>
         )}
       </CardBody>
     </Card>
@@ -137,7 +211,7 @@ function ReviewSection({ onReview }: { onReview: (iv: Invite) => void }) {
   const [status, setStatus] = useState<InviteStatus | "all">("pending");
   const { data, loading } = useFetch<InvitesRes>(
     `/invites/all${status !== "all" ? `?status=${status}` : ""}`,
-    [status]
+    [status],
   );
 
   return (
@@ -161,31 +235,12 @@ function ReviewSection({ onReview }: { onReview: (iv: Invite) => void }) {
       ) : data?.invites.length ? (
         <div className="invites-grid stagger">
           {data.invites.map((iv) => (
-            <Card key={iv.id} className="invite-card">
-              <CardBody>
-                <div className="invite-card-head">
-                  <span className="invite-card-group">{iv.topic}</span>
-                  {statusBadge(iv.status)}
-                </div>
-                <p className="invite-card-meta">
-                  群号 {iv.groupId} · 申请人 {iv.applicantQq} · {formatRelative(iv.createdAt)}
-                </p>
-                <div className="invite-card-tags">
-                  <span>渠道：{iv.channel}</span>
-                  <span>bot {iv.botQqs.length} 个</span>
-                  <span>{iv.allowBotAdmin ? "允许 bot 管理员" : "禁止"}</span>
-                </div>
-                {iv.status === "pending" && (
-                  <Button
-                    size="sm"
-                    className="mt-3"
-                    onClick={() => onReview(iv)}
-                  >
-                    <UserCheck size={13} /> 去审批
-                  </Button>
-                )}
-              </CardBody>
-            </Card>
+            <InviteCard
+              key={iv.id}
+              invite={iv}
+              showApplicant
+              onReview={onReview}
+            />
           ))}
         </div>
       ) : (
@@ -328,13 +383,23 @@ function ReviewDialog({
     <Modal
       open={!!invite}
       title="审批邀请"
-      description={invite ? `群 ${invite.groupId} · ${invite.topic} · 申请人 ${invite.applicantQq}` : ""}
+      description={
+        invite
+          ? `群 ${invite.groupId} · ${invite.topic}`
+          : ""
+      }
       confirmText={approved ? "通过" : "拒绝"}
       busy={busy}
       onConfirm={submit}
       onClose={onClose}
     >
       <div className="invites-review-form">
+        {invite && (
+          <div className="invite-review-applicant">
+            <UserChip qq={invite.applicantQq} nickname={invite.applicantNickname} />
+            <CopyGroupId groupId={invite.groupId} />
+          </div>
+        )}
         <div className="tab-bar">
           <button className="tab" data-active={approved} onClick={() => setApproved(true)}>
             <CheckCircle2 size={13} /> 通过

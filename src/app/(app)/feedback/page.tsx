@@ -11,6 +11,10 @@ import {
   MessagesSquare,
   ImageIcon,
   Download,
+  CircleDot,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { api, ApiRequestError } from "@/lib/api";
@@ -20,6 +24,7 @@ import type {
   Feedback,
   FeedbackAttachmentRef,
   FeedbackComment,
+  FeedbackEvent,
   FeedbackStatus,
   FeedbackUploadRes,
 } from "@/lib/types";
@@ -500,9 +505,11 @@ function FeedbackDetail({
         <div className="feedback-detail">
           <div className="feedback-detail-head">
             {statusBadge(data.feedback.status)}
-            <span className="feedback-detail-meta">
-              {data.feedback.userQq} · {formatRelative(data.feedback.createdAt)}
-            </span>
+            <UserChip
+              qq={data.feedback.userQq}
+              nickname={data.feedback.userNickname}
+              suffix={formatRelative(data.feedback.createdAt)}
+            />
           </div>
           <p className="feedback-detail-content">{data.feedback.content}</p>
           {data.feedback.attachments.length > 0 && (
@@ -531,6 +538,14 @@ function FeedbackDetail({
               </Button>
             )}
           </div>
+
+          {(data.events?.length ?? 0) > 0 && (
+            <ul className="feedback-events">
+              {data.events.map((ev) => (
+                <EventItem key={ev.id} event={ev} />
+              ))}
+            </ul>
+          )}
 
           <h4 className="feedback-comments-title">
             <MessagesSquare size={14} /> 评论 ({data.comments.length})
@@ -609,8 +624,78 @@ function FeedbackDetail({
   );
 }
 
+function UserChip({
+  qq,
+  nickname,
+  suffix,
+  className,
+}: {
+  qq: number;
+  nickname?: string | null;
+  suffix?: string;
+  className?: string;
+}) {
+  const display = nickname?.trim() || "未知用户";
+  return (
+    <span className={cn("feedback-user-chip", className)}>
+      <img
+        className="feedback-comment-avatar"
+        src={`https://q.qlogo.cn/headimg_dl?dst_uin=${qq}&spec=100`}
+        alt={display}
+        loading="lazy"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
+        }}
+      />
+      <span className="feedback-comment-name">{display}</span>
+      {suffix ? <span className="feedback-detail-meta">· {suffix}</span> : null}
+    </span>
+  );
+}
+
+function statusActionLabel(to: FeedbackStatus | null): string {
+  switch (to) {
+    case "open":
+      return "标记为开放";
+    case "resolved":
+      return "标记为已解决";
+    case "closed":
+      return "关闭了这个工单";
+    case "reopened":
+      return "重新打开了这个工单";
+    default:
+      return "更新了状态";
+  }
+}
+
+function statusActionIcon(to: FeedbackStatus | null) {
+  switch (to) {
+    case "resolved":
+      return <CheckCircle2 size={14} className="feedback-event-icon is-resolved" />;
+    case "closed":
+      return <XCircle size={14} className="feedback-event-icon is-closed" />;
+    case "reopened":
+      return <RotateCcw size={14} className="feedback-event-icon is-reopened" />;
+    case "open":
+    default:
+      return <CircleDot size={14} className="feedback-event-icon is-open" />;
+  }
+}
+
+function EventItem({ event: ev }: { event: FeedbackEvent }) {
+  const name = ev.actorNickname?.trim() || "未知用户";
+  return (
+    <li className="feedback-event">
+      {statusActionIcon(ev.toStatus)}
+      <span className="feedback-event-name">{name}</span>
+      <span className="feedback-event-action">{statusActionLabel(ev.toStatus)}</span>
+      <span className="feedback-event-time">{formatRelative(ev.createdAt)}</span>
+    </li>
+  );
+}
+
 function CommentItem({ comment: c }: { comment: FeedbackComment }) {
-  const display = c.nickname?.trim() || `QQ ${c.authorQq}`;
+  const display = c.nickname?.trim() || "未知用户";
   return (
     <li className="feedback-comment">
       <div className="feedback-comment-head">

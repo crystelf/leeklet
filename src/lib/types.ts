@@ -221,12 +221,14 @@ export interface Invite {
   id: number;
   groupId: number;
   applicantQq: number;
+  applicantNickname: string | null;
   topic: string;
   botQqs: number[];
   channel: string;
   allowBotAdmin: boolean;
   status: InviteStatus;
   reviewerQq: number | null;
+  reviewerNickname: string | null;
   reviewReason: string | null;
   createdAt: number;
   reviewedAt: number | null;
@@ -259,6 +261,7 @@ export interface FeedbackAttachmentRef {
 export interface Feedback {
   id: number;
   userQq: number;
+  userNickname: string | null;
   content: string;
   images: string[];
   attachments: FeedbackAttachmentRef[];
@@ -313,10 +316,26 @@ export interface FeedbackComment {
   isStaff: boolean;
   createdAt: number;
 }
+
+export type FeedbackEventAction = "status_change";
+
+export interface FeedbackEvent {
+  id: number;
+  feedbackId: number;
+  actorQq: number;
+  actorNickname: string | null;
+  actorRole: Role;
+  action: FeedbackEventAction;
+  fromStatus: FeedbackStatus | null;
+  toStatus: FeedbackStatus | null;
+  createdAt: number;
+}
+
 export interface FeedbackDetailRes {
   ok: true;
   feedback: Feedback;
   comments: FeedbackComment[];
+  events: FeedbackEvent[];
 }
 export interface FeedbackCommentReq {
   content: string;

@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
+  Bot,
   Megaphone,
   MessageSquare,
   Shield,
@@ -23,6 +24,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: "仪表盘",
     icon: LayoutDashboard,
     description: "账户状态概览",
+  },
+  {
+    href: "/bots",
+    label: "机器人",
+    icon: Bot,
+    description: "在线状态与 QQ 号",
   },
   {
     href: "/announcements",
@@ -63,4 +70,4 @@ export function visibleNav(role: Role | undefined): NavItem[] {
 }
 
 /** 移动端底部固定展示的5项（最常用） */
-export const MOBILE_PRIMARY = ["/", "/announcements", "/feedback", "/announcements/manage", "/about"];
+export const MOBILE_PRIMARY = ["/", "/bots", "/feedback", "/announcements", "/about"];

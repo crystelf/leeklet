@@ -151,6 +151,22 @@ export interface AdminModifyRes {
   admins?: number[];
 }
 
+// ===== 机器人状态 =====
+export interface BotStatus {
+  adapter: string;
+  botId: string;
+  qq: number;
+  nickname: string | null;
+  online: boolean;
+  connectedAt: number | null;
+}
+export interface BotsRes {
+  ok: true;
+  bots: BotStatus[];
+  total: number;
+  online: number;
+}
+
 // ===== 公告 =====
 export type AnnouncementStatus = "draft" | "published" | "archived";
 

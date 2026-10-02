@@ -1,14 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
-  Ticket,
-  Users,
-  SlidersHorizontal,
-  MailCheck,
   Megaphone,
   MessageSquare,
   Shield,
-  Receipt,
   Info,
 } from "lucide-react";
 import type { Role } from "@/lib/types";
@@ -27,44 +22,19 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/",
     label: "仪表盘",
     icon: LayoutDashboard,
-    description: "账户状态与卡密概览",
+    description: "账户状态概览",
   },
   {
-    href: "/cards",
-    label: "卡密",
-    icon: Ticket,
-    description: "兑换与余量",
-  },
-  {
-    href: "/groups",
-    label: "群管理",
-    icon: Users,
-    description: "认领与激活群会员",
-  },
-  {
-    href: "/control",
-    label: "功能控制",
-    icon: SlidersHorizontal,
-    description: "Bot 与 AI 开关",
-  },
-  {
-    href: "/invites",
-    label: "邀请",
-    icon: MailCheck,
-    description: "拉群申请与审批",
+    href: "/announcements",
+    label: "公告",
+    icon: Megaphone,
+    description: "查看最新公告",
   },
   {
     href: "/feedback",
     label: "反馈",
     icon: MessageSquare,
     description: "提交与跟踪反馈",
-  },
-  {
-    href: "/subscriptions",
-    label: "订阅",
-    icon: Receipt,
-    need: "internal",
-    description: "会员订阅与兑换记录",
   },
   {
     href: "/announcements/manage",
@@ -93,4 +63,4 @@ export function visibleNav(role: Role | undefined): NavItem[] {
 }
 
 /** 移动端底部固定展示的5项（最常用） */
-export const MOBILE_PRIMARY = ["/groups", "/control", "/invites", "/feedback", "/about"];
+export const MOBILE_PRIMARY = ["/", "/announcements", "/feedback", "/announcements/manage", "/about"];

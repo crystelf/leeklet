@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s · Leeklet",
   },
   description:
-    "基于 mioku-plugin-crystelf 的初音未来主题管理面板：卡密、群管理、AI 控制、邀请审批与反馈。",
+    "基于 mioku-plugin-crystelf 的初音未来主题管理面板：账户状态、公告与反馈。",
   applicationName: "Leeklet",
   icons: { icon: "/leek.png", apple: "/leek.png" },
 };

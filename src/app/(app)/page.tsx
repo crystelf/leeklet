@@ -1,68 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard,
-  Ticket,
-  Users,
+  Megaphone,
   MessageSquare,
+  Info,
   ArrowRight,
   CalendarClock,
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
-import { api, ApiRequestError } from "@/lib/api";
-import type { CardKind, CardsAvailable } from "@/lib/types";
-import { Card, CardBody } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { RoleBadge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/shell/page-header";
 import { isAdmin, roleLabel, remainingDays, formatMs } from "@/lib/format";
 import "./dashboard.css";
 
-const CARD_OPTIONS = [
-  { k: "month" as const, label: "月卡", days: 30 },
-  { k: "quarter" as const, label: "季卡", days: 90 },
-  { k: "year" as const, label: "年卡", days: 365 },
-];
-
-// 购买链接占位：填入后对应卡片按钮跳转外部购买页，留空则显示「暂未开放」
-const PURCHASE_LINKS: Record<CardKind, string> = {
-  month: "",
-  quarter: "",
-  year: "",
-};
-
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [cards, setCards] = useState<CardsAvailable | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const admin = !!user && isAdmin(user.role);
-
-  useEffect(() => {
-    if (!admin) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    let alive = true;
-    api
-      .get<CardsAvailable>("/cards/available")
-      .then((c) => alive && setCards(c))
-      .catch((e) => {
-        if (e instanceof ApiRequestError) console.warn(e.body);
-      })
-      .finally(() => alive && setLoading(false));
-    return () => {
-      alive = false;
-    };
-  }, [admin]);
 
   if (!user) return null;
 
+  const admin = isAdmin(user.role);
   const isInternalOrAdmin = user.role === "internal" || user.role === "admin";
   const days = remainingDays(user.memberUntil);
   const memberActive = isInternalOrAdmin || user.role === "member";
@@ -77,7 +37,7 @@ export default function DashboardPage() {
       <PageHeader
         icon={<LayoutDashboard size={22} />}
         title="仪表盘"
-        subtitle="账户状态与卡密概览"
+        subtitle="账户状态概览"
       />
 
       {/* 欢迎卡片 */}
@@ -133,91 +93,22 @@ export default function DashboardPage() {
             ) : (
               <p className="dash-member-empty">
                 暂无会员<br />
-                <Link href="/cards" className="dash-member-link">
-                  去兑换 <ArrowRight size={12} />
-                </Link>
+                如需开通请联系管理员
               </p>
             )}
           </div>
         </div>
       </Card>
 
-      {/* 卡密：admin 看库存余量，其他角色看购买入口 */}
-      <h3 className="dash-section-title">{admin ? "卡密余量" : "卡密购买"}</h3>
-      <div className="dash-cards-grid stagger">
-        {admin ? (
-          loading ? (
-            <Card soft className="dash-card-loading">
-              <Spinner />
-            </Card>
-          ) : cards ? (
-            CARD_OPTIONS.map((item) => (
-              <Card key={item.k} className="dash-stock-card">
-                <CardBody>
-                  <div className="dash-stock-top">
-                    <Ticket size={18} />
-                    <span>{item.label}</span>
-                  </div>
-                  <div className="dash-stock-num">
-                    {cards[item.k] ?? 0}
-                    <span className="dash-stock-unit">张</span>
-                  </div>
-                  <p className="dash-stock-days">有效期 {item.days} 天</p>
-                  <Link href="/cards">
-                    <Button variant="soft" size="sm" className="w-full mt-3">
-                      去兑换
-                    </Button>
-                  </Link>
-                </CardBody>
-              </Card>
-            ))
-          ) : (
-            <Card soft className="dash-card-loading">
-              <span className="text-sm" style={{ color: "var(--fg-muted)" }}>
-                无法加载余量
-              </span>
-            </Card>
-          )
-        ) : (
-          CARD_OPTIONS.map((item) => {
-            const link = PURCHASE_LINKS[item.k];
-            return (
-              <Card key={item.k} className="dash-stock-card">
-                <CardBody>
-                  <div className="dash-stock-top">
-                    <Ticket size={18} />
-                    <span>{item.label}</span>
-                  </div>
-                  <div className="dash-stock-num">
-                    {item.days}
-                    <span className="dash-stock-unit">天</span>
-                  </div>
-                  <p className="dash-stock-days">购买后发放对应卡密</p>
-                  {link ? (
-                    <a href={link} target="_blank" rel="noreferrer" className="block">
-                      <Button variant="soft" size="sm" className="w-full mt-3">
-                        立即购买
-                      </Button>
-                    </a>
-                  ) : (
-                    <Button variant="soft" size="sm" className="w-full mt-3" disabled>
-                      暂未开放
-                    </Button>
-                  )}
-                </CardBody>
-              </Card>
-            );
-          })
-        )}
-      </div>
-
       {/* 快捷入口 */}
       <h3 className="dash-section-title">快捷入口</h3>
       <div className="dash-quick-grid stagger">
-        <QuickLink href="/cards" icon={<Ticket size={20} />} title="兑换卡密" hint="消费一张卡密延长会员" />
-        <QuickLink href="/groups" icon={<Users size={20} />} title="认领群" hint="激活群会员状态" />
+        <QuickLink href="/announcements" icon={<Megaphone size={20} />} title="查看公告" hint="了解最新动态与通知" />
         <QuickLink href="/feedback" icon={<MessageSquare size={20} />} title="提交反馈" hint="报告问题或建议" />
-        <QuickLink href="/control" icon={<LayoutDashboard size={20} />} title="功能控制" hint="管理 bot 与 AI 开关" />
+        {admin && (
+          <QuickLink href="/announcements/manage" icon={<Megaphone size={20} />} title="公告管理" hint="发布与管理公告" />
+        )}
+        <QuickLink href="/about" icon={<Info size={20} />} title="关于 Leeklet" hint="了解 Leeklet" />
       </div>
     </>
   );

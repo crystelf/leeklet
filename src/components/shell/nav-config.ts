@@ -5,7 +5,9 @@ import {
   Megaphone,
   MessageSquare,
   Shield,
+  Share2,
   Info,
+  ShieldCheck,
 } from "lucide-react";
 import type { Role } from "@/lib/types";
 import { hasRole } from "@/lib/format";
@@ -32,6 +34,13 @@ export const NAV_ITEMS: NavItem[] = [
     description: "在线状态与 QQ 号",
   },
   {
+    href: "/connect",
+    label: "Connect",
+    icon: Share2,
+    need: "internal",
+    description: "托管自己的代挂机器人",
+  },
+  {
     href: "/announcements",
     label: "公告",
     icon: Megaphone,
@@ -49,6 +58,13 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Megaphone,
     need: "admin",
     description: "发布与管理公告",
+  },
+  {
+    href: "/admin/connect",
+    label: "Connect 管理",
+    icon: ShieldCheck,
+    need: "admin",
+    description: "管理所有代挂机器人",
   },
   {
     href: "/admin",

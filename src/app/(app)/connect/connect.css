@@ -1,0 +1,206 @@
+/* ---- Connect 社区代挂 ---- */
+.connect-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.connect-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.connect-stat-card {
+  transition: transform 0.2s var(--ease-pop), box-shadow 0.2s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .connect-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+.connect-stat-top {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+.connect-stat-num {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 6px 0 2px;
+  line-height: 1;
+}
+.connect-stat-num.is-online { color: var(--accent-strong); }
+.connect-stat-num.is-warn { color: #b98900; }
+.dark .connect-stat-num.is-warn { color: #ffd954; }
+
+.connect-loading {
+  display: flex;
+  justify-content: center;
+  padding: 36px 0;
+}
+
+.connect-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+@media (max-width: 860px) {
+  .connect-grid {
+    grid-template-columns: 1fr;
+  }
+  .connect-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.connect-card {
+  transition: transform 0.2s var(--ease-pop), box-shadow 0.2s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .connect-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+.connect-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.connect-avatar,
+.connect-avatar-fallback {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.connect-avatar {
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+.connect-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-soft);
+  color: var(--fg-muted);
+}
+.connect-card-id {
+  min-width: 0;
+  flex: 1;
+}
+.connect-name {
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--fg);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.connect-qq {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin: 2px 0 0;
+}
+.connect-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.connect-status.is-online {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.connect-status.is-awaiting_scan,
+.connect-status.is-starting {
+  background: #fff3cd;
+  color: #997a01;
+}
+.dark .connect-status.is-awaiting_scan,
+.dark .connect-status.is-starting {
+  background: rgb(255 243 205 / 0.16);
+  color: #ffd954;
+}
+.connect-status.is-idle {
+  background: var(--bg-soft);
+  color: var(--fg-muted);
+}
+.connect-error {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--color-miku-pink-600, #d6486e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.connect-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.connect-delete {
+  margin-left: auto;
+  color: var(--fg-muted);
+}
+
+.connect-spin {
+  animation: connect-spin 0.9s linear infinite;
+}
+@keyframes connect-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- 二维码弹窗 ---- */
+.connect-qr-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 32px));
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 18px);
+  box-shadow: var(--shadow-lg, 0 24px 64px rgb(0 0 0 / 0.25));
+  padding: 22px;
+  z-index: 60;
+}
+.connect-qr-hint {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--fg-soft);
+  line-height: 1.6;
+}
+.connect-qr-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  margin-top: 14px;
+  background: var(--bg-soft);
+  border-radius: 12px;
+  padding: 12px;
+}
+.connect-qr-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  image-rendering: pixelated;
+}
+.connect-qr-time {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--fg-muted);
+  text-align: right;
+  min-height: 16px;
+}

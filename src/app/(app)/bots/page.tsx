@@ -140,6 +140,11 @@ function BotCard({ bot }: { bot: BotStatus }) {
           <Badge variant="normal" className="bot-adapter">
             {bot.adapter}
           </Badge>
+          {bot.connect && (
+            <Badge variant="internal" className="bot-community">
+              社区
+            </Badge>
+          )}
           <span className="bot-connected" title={formatMs(bot.connectedAt)}>
             {bot.online
               ? `连接于 ${formatRelative(bot.connectedAt)}`

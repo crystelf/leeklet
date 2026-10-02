@@ -45,6 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 function DesktopSidebar({ pathname }: { pathname: string }) {
   const { user, logout } = useAuth();
   const items = visibleNav(user?.role);
+  const activeHref = resolveActiveHref(pathname, items.map((item) => item.href));
 
   return (
     <aside className="app-sidebar">
@@ -54,7 +55,7 @@ function DesktopSidebar({ pathname }: { pathname: string }) {
 
       <nav className="app-sidebar-nav" aria-label="主导航">
         {items.map((item) => {
-          const active = isActive(pathname, item.href);
+          const active = item.href === activeHref;
           const Icon = item.icon;
           return (
             <Link
@@ -126,6 +127,7 @@ function MobileDrawer({
 }) {
   const { user, logout } = useAuth();
   const items = visibleNav(user?.role);
+  const activeHref = resolveActiveHref(pathname, items.map((item) => item.href));
   if (!open) return null;
 
   return (
@@ -145,7 +147,7 @@ function MobileDrawer({
         </div>
         <nav className="app-drawer-nav">
           {items.map((item) => {
-            const active = isActive(pathname, item.href);
+            const active = item.href === activeHref;
             const Icon = item.icon;
             return (
               <Link
@@ -180,10 +182,14 @@ function MobileBottomNav({ pathname }: { pathname: string }) {
   const items = visibleNav(user?.role).filter((it) =>
     MOBILE_PRIMARY.includes(it.href)
   );
+  const activeHref = resolveActiveHref(
+    pathname,
+    items.map((item) => item.href)
+  );
   return (
     <nav className="app-bottom-nav" aria-label="底部导航">
       {items.map((item) => {
-        const active = isActive(pathname, item.href);
+        const active = item.href === activeHref;
         const Icon = item.icon;
         return (
           <Link
@@ -244,4 +250,17 @@ function UserCard() {
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * 最长匹配优先:子路由有独立导航项时(如 /admin/connect),
+ * 父级(/admin)不再同时点亮;子路由无导航项时(如 /feedback/123)父级保持点亮。
+ */
+function resolveActiveHref(pathname: string, hrefs: readonly string[]): string | null {
+  let best: string | null = null;
+  for (const href of hrefs) {
+    if (!isActive(pathname, href)) continue;
+    if (best === null || href.length > best.length) best = href;
+  }
+  return best;
 }

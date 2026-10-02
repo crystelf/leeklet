@@ -159,12 +159,75 @@ export interface BotStatus {
   nickname: string | null;
   online: boolean;
   connectedAt: number | null;
+  /** Connect 托管的社区 bot */
+  connect?: boolean;
 }
 export interface BotsRes {
   ok: true;
   bots: BotStatus[];
   total: number;
   online: number;
+}
+
+// ===== Connect 社区代挂 =====
+export type ConnectStatus = "idle" | "starting" | "awaiting_scan" | "online";
+
+export interface ConnectBot {
+  id: number;
+  ownerQq: number;
+  botQq: number;
+  nickname: string | null;
+  status: ConnectStatus;
+  lastError: string | null;
+  createdAt: number;
+  ownerRole?: string;
+}
+
+export interface ConnectQuota {
+  used: number;
+  max: number;
+  override: number | null;
+  default: number;
+}
+
+export interface ConnectBotsRes {
+  ok: true;
+  bots: ConnectBot[];
+  quota: ConnectQuota;
+}
+
+export interface ConnectCreateRes {
+  ok: true;
+  id: number;
+}
+
+export type ConnectQrRes =
+  | { ok: true; phase: "online" | "offline" }
+  | { ok: true; phase: "awaiting_scan"; image: string; capturedAt: number }
+  | { ok: true; phase: "unavailable"; error: string };
+
+export interface ConnectOwner {
+  qq: number;
+  nickname: string | null;
+  used: number;
+  override: number | null;
+  effective: number;
+}
+
+export interface ConnectOwnersRes {
+  ok: true;
+  owners: ConnectOwner[];
+}
+
+export interface ConnectAllBotsRes {
+  ok: true;
+  bots: ConnectBot[];
+}
+
+export interface ConnectLimitRes {
+  ok: true;
+  qq: number;
+  limit: number | null;
 }
 
 // ===== 公告 =====

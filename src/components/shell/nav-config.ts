@@ -47,7 +47,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/announcements/manage",
     label: "公告管理",
     icon: Megaphone,
-    need: "internal",
+    need: "admin",
     description: "发布与管理公告",
   },
   {

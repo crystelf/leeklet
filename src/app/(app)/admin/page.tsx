@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Shield,
-  UserPlus,
-  UserMinus,
-  Users,
-  Crown,
-} from "lucide-react";
+import { Shield, UserPlus, UserMinus, Users, Crown } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { api, ApiRequestError } from "@/lib/api";
 import type { AdminListRes, AdminModifyRes } from "@/lib/types";
@@ -21,13 +15,11 @@ import { PageHeader } from "@/components/shell/page-header";
 import { useToast } from "@/components/ui/toast";
 import { useFetch } from "@/lib/use-fetch";
 import "./admin.css";
-import "./admin.css";
 
 export default function AdminPage() {
   const { user } = useAuth();
   const { data, loading, error, reload } = useFetch<AdminListRes>("/admin/internals");
   const toast = useToast();
-  const [qqInput, setQqInput] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
 
   if (user?.role !== "admin") {
@@ -39,7 +31,7 @@ export default function AdminPage() {
             <Empty
               icon={Shield}
               title="仅管理员可访问"
-              hint="此页面用于管理内部成员与管理员名单。"
+              hint="此页面用于管理内部会员与管理员名单。"
             />
           </CardBody>
         </Card>
@@ -47,30 +39,11 @@ export default function AdminPage() {
     );
   }
 
-  const addOne = async (kind: "internals" | "admins") => {
-    const qq = Number(qqInput.trim());
-    if (!qq) {
-      toast.error("请输入 QQ 号");
-      return;
-    }
-    setBusy(`${kind}:add`);
+  const modify = async (kind: "internals" | "admins", qq: number, add: boolean) => {
+    setBusy(`${kind}:${add ? "add" : "rm"}:${qq}`);
     try {
-      await api.post<AdminModifyRes>(`/admin/${kind}`, { qq, add: true });
-      toast.success(`已添加 ${qq}`);
-      setQqInput("");
-      void reload();
-    } catch (e) {
-      toast.error(e instanceof ApiRequestError ? e.body.error : "操作失败");
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const removeOne = async (kind: "internals" | "admins", qq: number) => {
-    setBusy(`${kind}:rm:${qq}`);
-    try {
-      await api.post<AdminModifyRes>(`/admin/${kind}`, { qq, add: false });
-      toast.success(`已移除 ${qq}`);
+      await api.post<AdminModifyRes>(`/admin/${kind}`, { qq, add });
+      toast.success(add ? `已添加 ${qq}` : `已移除 ${qq}`);
       void reload();
     } catch (e) {
       toast.error(e instanceof ApiRequestError ? e.body.error : "操作失败");
@@ -84,38 +57,8 @@ export default function AdminPage() {
       <PageHeader
         icon={<Shield size={22} />}
         title="管理后台"
-        subtitle="管理内部成员与管理员名单"
+        subtitle="管理内部会员与管理员名单"
       />
-
-      <Card className="mb-5">
-        <CardBody>
-          <h3 className="admin-section-title">添加成员</h3>
-          <p className="admin-section-sub">输入 QQ 号，加入内部成员或管理员；移除从下方列表操作。</p>
-          <div className="admin-input-row">
-            <Input
-              type="number"
-              placeholder="目标 QQ 号"
-              value={qqInput}
-              onChange={(e) => setQqInput(e.target.value)}
-            />
-            <Button
-              variant="soft"
-              onClick={() => void addOne("internals")}
-              loading={busy === "internals:add"}
-              disabled={!qqInput.trim()}
-            >
-              <UserPlus size={14} /> 加内部
-            </Button>
-            <Button
-              onClick={() => void addOne("admins")}
-              loading={busy === "admins:add"}
-              disabled={!qqInput.trim()}
-            >
-              <Crown size={14} /> 加管理员
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
 
       {loading ? (
         <div className="admin-loading"><Spinner /></div>
@@ -123,23 +66,29 @@ export default function AdminPage() {
         <Card soft><CardBody><p className="admin-error">{error}</p></CardBody></Card>
       ) : data ? (
         <div className="admin-lists stagger">
-          <RoleList
-            title="内部成员"
+          <RoleSection
+            title="内部会员"
+            description="将 QQ 号加入内部会员名单，仅管理员可操作。"
             icon={<Users size={16} />}
+            fallbackIcon={<Users size={20} strokeWidth={1.6} />}
             variant="internal"
             list={data.internals}
             selfQq={user.qq}
             busy={busy}
-            onRemove={(qq) => void removeOne("internals", qq)}
+            onAdd={(qq) => void modify("internals", qq, true)}
+            onRemove={(qq) => void modify("internals", qq, false)}
           />
-          <RoleList
+          <RoleSection
             title="管理员"
+            description="将 QQ 号加入管理员名单，仅管理员可操作。"
             icon={<Crown size={16} />}
+            fallbackIcon={<Crown size={20} strokeWidth={1.6} />}
             variant="admin"
             list={data.admins}
             selfQq={user.qq}
             busy={busy}
-            onRemove={(qq) => void removeOne("admins", qq)}
+            onAdd={(qq) => void modify("admins", qq, true)}
+            onRemove={(qq) => void modify("admins", qq, false)}
           />
         </div>
       ) : null}
@@ -147,23 +96,38 @@ export default function AdminPage() {
   );
 }
 
-function RoleList({
+function RoleSection({
   title,
+  description,
   icon,
+  fallbackIcon,
   variant,
   list,
   selfQq,
   busy,
+  onAdd,
   onRemove,
 }: {
   title: string;
+  description: string;
   icon: React.ReactNode;
+  fallbackIcon: React.ReactNode;
   variant: "internal" | "admin";
   list: number[];
   selfQq: number;
   busy: string | null;
+  onAdd: (qq: number) => void;
   onRemove: (qq: number) => void;
 }) {
+  const [qqInput, setQqInput] = useState("");
+  const inputQq = Number(qqInput.trim());
+
+  const add = () => {
+    if (!inputQq) return;
+    onAdd(inputQq);
+    setQqInput("");
+  };
+
   return (
     <Card>
       <CardBody>
@@ -172,10 +136,31 @@ function RoleList({
           <h3 className="admin-list-title">{title}</h3>
           <Badge variant={variant}>{list.length}</Badge>
         </div>
+        <p className="admin-section-sub">{description}</p>
+        <div className="admin-input-row">
+          <Input
+            type="number"
+            placeholder="QQ 号"
+            value={qqInput}
+            onChange={(e) => setQqInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") add();
+            }}
+          />
+          <Button
+            variant="soft"
+            size="sm"
+            onClick={add}
+            disabled={!qqInput.trim() || !!busy}
+          >
+            <UserPlus size={14} /> 添加
+          </Button>
+        </div>
         {list.length > 0 ? (
-          <ul className="admin-list">
+          <ul className="admin-list admin-member-list">
             {list.map((qq) => (
-              <li key={qq} className="admin-list-item">
+              <li key={qq} className="admin-list-item admin-member-row">
+                <Avatar qq={qq} fallback={fallbackIcon} />
                 <span className="admin-list-qq">{qq}</span>
                 {qq === selfQq && <Badge variant="pending">你自己</Badge>}
                 {qq !== selfQq && (
@@ -196,5 +181,22 @@ function RoleList({
         )}
       </CardBody>
     </Card>
+  );
+}
+
+function Avatar({ qq, fallback }: { qq: number; fallback: React.ReactNode }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed || !qq) {
+    return <span className="admin-avatar-fallback">{fallback}</span>;
+  }
+  return (
+    <img
+      className="admin-avatar"
+      src={`https://q.qlogo.cn/headimg_dl?dst_uin=${qq}&spec=160`}
+      alt={`QQ ${qq}`}
+      draggable={false}
+      onError={() => setFailed(true)}
+    />
   );
 }

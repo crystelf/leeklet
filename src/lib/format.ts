@@ -5,7 +5,7 @@ export function roleLabel(role: Role): string {
     case "admin":
       return "管理员";
     case "internal":
-      return "内部成员";
+      return "内部会员";
     case "member":
       return "会员";
     default:

@@ -116,6 +116,32 @@
   color: var(--fg-muted);
 }
 
+.admin-member-list {
+  margin-top: 14px;
+}
+.admin-member-row {
+  padding: 8px 10px;
+}
+.admin-avatar {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--accent-soft);
+  flex-shrink: 0;
+}
+.admin-avatar-fallback {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  flex-shrink: 0;
+}
+
 @media (max-width: 700px) {
   .admin-lists { grid-template-columns: 1fr; }
 }

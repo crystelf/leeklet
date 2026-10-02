@@ -25,12 +25,12 @@ import { Modal } from "@/components/ui/modal";
 import { PageHeader } from "@/components/shell/page-header";
 import { useToast } from "@/components/ui/toast";
 import { useFetch } from "@/lib/use-fetch";
-import { isStaff, formatRelative, formatMs } from "@/lib/format";
+import { isAdmin, formatRelative, formatMs } from "@/lib/format";
 import "../announcements.css";
 
 export default function AnnouncementsManagePage() {
   const { user } = useAuth();
-  const staff = isStaff(user?.role);
+  const admin = isAdmin(user?.role);
   const { data, loading, error, reload } = useFetch<AnnouncementManageListRes>(
     "/announcements/manage",
   );
@@ -38,13 +38,13 @@ export default function AnnouncementsManagePage() {
   const [editOpen, setEditOpen] = useState(false);
   const [viewTarget, setViewTarget] = useState<Announcement | null>(null);
 
-  if (!staff) {
+  if (!admin) {
     return (
       <>
         <PageHeader icon={<Megaphone size={22} />} title="公告管理" />
         <Card soft>
           <CardBody>
-            <Empty icon={Megaphone} title="仅内部成员可访问" hint="此页面用于管理公告。" />
+            <Empty icon={Megaphone} title="仅管理员可访问" hint="此页面用于发布与管理公告。" />
           </CardBody>
         </Card>
       </>

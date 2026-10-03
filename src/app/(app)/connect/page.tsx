@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Share2,
   Play,
@@ -11,12 +11,21 @@ import {
   Wifi,
   WifiOff,
   RefreshCw,
-  ScanLine,
+  Check,
+  X,
+  Circle,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { api, ApiRequestError } from "@/lib/api";
 import { useFetch } from "@/lib/use-fetch";
-import type { ConnectBot, ConnectBotsRes, ConnectQrRes } from "@/lib/types";
+import type {
+  ConnectBot,
+  ConnectBotsRes,
+  ConnectProgressRes,
+  ConnectProgressStep,
+} from "@/lib/types";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Empty } from "@/components/ui/empty";
@@ -30,7 +39,7 @@ import "./connect.css";
 
 const LIST_REFRESH_MS = 5_000;
 const ACTIVE_REFRESH_MS = 3_000;
-const QR_REFRESH_MS = 2_500;
+const PROGRESS_POLL_MS = 2_000;
 
 const STATUS_LABEL: Record<ConnectBot["status"], string> = {
   idle: "离线",
@@ -46,7 +55,7 @@ export default function ConnectPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createQq, setCreateQq] = useState("");
-  const [qrBot, setQrBot] = useState<ConnectBot | null>(null);
+  const [panelBot, setPanelBot] = useState<ConnectBot | null>(null);
   const [deleteBot, setDeleteBot] = useState<ConnectBot | null>(null);
 
   // 存在进行中的任务时加快轮询
@@ -62,6 +71,19 @@ export default function ConnectPage() {
     );
     return () => clearInterval(timer);
   }, [reload, hasActive]);
+
+  const run = async (key: string, action: () => Promise<unknown>, done: string) => {
+    setBusy(key);
+    try {
+      await action();
+      toast.success(done);
+      void reload();
+    } catch (e) {
+      toast.error(e instanceof ApiRequestError ? e.body.error : "操作失败");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   if (!user) return null;
   if (!hasRole(user.role, "internal")) {
@@ -81,19 +103,6 @@ export default function ConnectPage() {
     );
   }
 
-  const run = async (key: string, action: () => Promise<unknown>, done: string) => {
-    setBusy(key);
-    try {
-      await action();
-      toast.success(done);
-      void reload();
-    } catch (e) {
-      toast.error(e instanceof ApiRequestError ? e.body.error : "操作失败");
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const create = async () => {
     const qq = createQq.trim();
     if (!/^\d{5,11}$/.test(qq)) {
@@ -105,8 +114,6 @@ export default function ConnectPage() {
     setCreateOpen(false);
   };
 
-  const login = (bot: ConnectBot) =>
-    run(`login:${bot.id}`, () => api.post(`/connect/bots/${bot.id}/login`), `正在拉起 ${bot.botQq} 的容器`);
   const stop = (bot: ConnectBot) =>
     run(`stop:${bot.id}`, () => api.post(`/connect/bots/${bot.id}/stop`), `已下线 ${bot.botQq}`);
   const remove = async (bot: ConnectBot) => {
@@ -195,9 +202,9 @@ export default function ConnectPage() {
               key={bot.id}
               bot={bot}
               busy={busy}
-              onLogin={() => void login(bot)}
+              onLogin={() => setPanelBot(bot)}
               onStop={() => void stop(bot)}
-              onQr={() => setQrBot(bot)}
+              onQr={() => setPanelBot(bot)}
               onDelete={() => setDeleteBot(bot)}
             />
           ))}
@@ -239,11 +246,11 @@ export default function ConnectPage() {
         <span />
       </Modal>
 
-      {qrBot && (
-        <QrModal
-          bot={qrBot}
+      {panelBot && (
+        <ConnectLoginPanel
+          bot={panelBot}
           onClose={() => {
-            setQrBot(null);
+            setPanelBot(null);
             void reload();
           }}
         />
@@ -320,10 +327,11 @@ function BotCard({
             {STATUS_LABEL[bot.status]}
           </span>
         </div>
+        {bot.stepLabel && <p className="connect-step">{bot.stepLabel}</p>}
         {bot.lastError && <p className="connect-error">{bot.lastError}</p>}
         <div className="connect-card-actions">
           {bot.status === "idle" ? (
-            <Button variant="primary" size="sm" loading={busy === `login:${bot.id}`} onClick={onLogin}>
+            <Button variant="primary" size="sm" onClick={onLogin}>
               <Play size={13} />
               登录
             </Button>
@@ -336,7 +344,7 @@ function BotCard({
             <>
               <Button variant="soft" size="sm" onClick={onQr}>
                 <QrCode size={13} />
-                显示二维码
+                查看进度
               </Button>
               <Button variant="ghost" size="sm" loading={busy === `stop:${bot.id}`} onClick={onStop}>
                 取消登录
@@ -359,43 +367,93 @@ function BotCard({
   );
 }
 
-function QrModal({ bot, onClose }: { bot: ConnectBot; onClose: () => void }) {
-  const [phase, setPhase] = useState<
-    "loading" | "awaiting_scan" | "online" | "offline" | "unavailable"
-  >("loading");
-  const [image, setImage] = useState<string | null>(null);
-  const [capturedAt, setCapturedAt] = useState<number | null>(null);
+/**
+ * 登录/扫码面板:点击登录立刻打开,轮询后端步骤进度,
+ * 走到抓取二维码那一步就把二维码显示出来。
+ */
+function ConnectLoginPanel({
+  bot,
+  onClose,
+}: {
+  bot: ConnectBot;
+  onClose: () => void;
+}) {
+  const [res, setRes] = useState<ConnectProgressRes | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stopping, setStopping] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  const started = useRef(false);
+
+  // 点到"登录"就触发一次拉起;已在跑/等扫码的 bot 只做轮询
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    if (bot.status !== "idle") return;
+    api.post(`/connect/bots/${bot.id}/login`).catch((e) => {
+      setError(e instanceof ApiRequestError ? e.body.error : "登录请求发送失败");
+    });
+  }, [bot.id, bot.status]);
 
   useEffect(() => {
     let alive = true;
-    const load = async () => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const tick = async () => {
       try {
-        const res = await api.get<ConnectQrRes>(`/connect/bots/${bot.id}/qrcode`);
+        const next = await api.get<ConnectProgressRes>(`/connect/bots/${bot.id}/progress`);
         if (!alive) return;
-        if ("error" in res) {
-          setPhase("unavailable");
-          setError(res.error);
-        } else if (res.phase === "awaiting_scan") {
-          setPhase("awaiting_scan");
-          setImage(res.image);
-          setCapturedAt(res.capturedAt);
-        } else if (res.phase === "online") {
-          setPhase("online");
-        } else {
-          setPhase("offline");
+        setRes(next);
+        setError(null);
+        // 出错或已上线就停止轮询,其余情况持续跟进
+        const settledBad = next.progress.settled && !!next.progress.error;
+        const finished = next.qr.phase === "online";
+        if (!settledBad && !finished) {
+          timer = setTimeout(() => void tick(), PROGRESS_POLL_MS);
         }
-      } catch {
-        if (alive) setPhase("unavailable");
+      } catch (e) {
+        if (!alive) return;
+        setError(e instanceof ApiRequestError ? e.body.error : "无法获取登录进度");
+        timer = setTimeout(() => void tick(), PROGRESS_POLL_MS * 2);
       }
     };
-    void load();
-    const timer = setInterval(() => void load(), QR_REFRESH_MS);
+
+    void tick();
     return () => {
       alive = false;
-      clearInterval(timer);
+      if (timer) clearTimeout(timer);
     };
   }, [bot.id]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const cancel = async () => {
+    setStopping(true);
+    try {
+      await api.post(`/connect/bots/${bot.id}/stop`);
+    } catch {
+      /* 取消失败也要关闭面板,列表刷新会纠正状态 */
+    } finally {
+      setStopping(false);
+      onClose();
+    }
+  };
+
+  const steps: ConnectProgressStep[] = res?.progress.steps ?? [];
+  const qr = res?.qr;
+  const failed = res?.progress.error ?? error;
+  const online = qr?.phase === "online";
+  const remaining =
+    res?.deadline && res.deadline > now ? Math.ceil((res.deadline - now) / 1000) : null;
+
+  const title = online ? "登录成功" : failed ? "登录失败" : `正在登录 ${bot.botQq}`;
+  const subtitle = online
+    ? "bot 已通过反向连接接入,可以关闭此窗口。"
+    : failed
+      ? "拉起过程中出错,下面是失败原因;可关闭窗口后重试。"
+      : "正在按步骤拉起容器,首次登录需要先拉取镜像,可能要几分钟。";
 
   return (
     <div className="dialog-backdrop" onClick={onClose} aria-hidden="true">
@@ -406,40 +464,82 @@ function QrModal({ bot, onClose }: { bot: ConnectBot; onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-display text-lg font-bold" style={{ color: "var(--fg)" }}>
-          扫码登录 {bot.botQq}
+          {title}
         </h3>
-        <p className="connect-qr-hint">
-          使用手机 QQ 扫描二维码完成登录;二维码每 {QR_REFRESH_MS / 1000} 秒自动刷新。
-        </p>
+        <p className="connect-qr-hint">{subtitle}</p>
+
+        <ol className="connect-steps">
+          {steps.length === 0 && (
+            <li className="connect-step-row is-active">
+              <Loader2 size={13} className="connect-spin" />
+              <span className="connect-step-label">正在获取进度…</span>
+            </li>
+          )}
+          {steps.map((step) => (
+            <li key={step.id} className={`connect-step-row is-${step.state}`}>
+              <StepIcon state={step.state} />
+              <span className="connect-step-label">{step.label}</span>
+              {step.detail && <span className="connect-step-detail">{step.detail}</span>}
+            </li>
+          ))}
+        </ol>
+
+        {failed && (
+          <p className="connect-qr-error">
+            <AlertCircle size={13} />
+            {failed}
+          </p>
+        )}
+
         <div className="connect-qr-body">
-          {phase === "loading" && <Spinner />}
-          {phase === "awaiting_scan" && image && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="connect-qr-image" src={image} alt="登录二维码" />
-          )}
-          {phase === "online" && (
+          {online ? (
             <Empty icon={Wifi} title="已登录" hint="bot 已通过反向连接接入。" />
-          )}
-          {phase === "offline" && (
-            <Empty icon={ScanLine} title="容器未启动" hint="请先点击登录拉起容器。" />
-          )}
-          {phase === "unavailable" && (
+          ) : qr?.phase === "awaiting_scan" ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="connect-qr-image" src={qr.image} alt="登录二维码" />
+          ) : failed ? (
             <Empty
-              icon={ScanLine}
-              title="二维码暂不可用"
-              hint={error ?? "正在等待桌面就绪,稍后会自动重试。"}
+              icon={AlertCircle}
+              title="未能完成登录"
+              hint="原因见上方步骤与错误提示,关闭后可以重新点击登录。"
             />
+          ) : qr?.phase === "unavailable" ? (
+            <Empty
+              icon={Loader2}
+              title="正在等待二维码出现"
+              hint={qr.error}
+            />
+          ) : (
+            <Spinner />
           )}
         </div>
+
         <p className="connect-qr-time">
-          {capturedAt ? `截图时间 ${new Date(capturedAt).toLocaleTimeString("zh-CN")}` : " "}
+          {remaining != null
+            ? `剩余扫码时间 ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`
+            : qr?.phase === "awaiting_scan"
+              ? `截图时间 ${new Date(qr.capturedAt).toLocaleTimeString("zh-CN")}`
+              : " "}
         </p>
-        <div className="flex justify-end">
-          <Button variant="ghost" size="md" onClick={onClose}>
+
+        <div className="flex justify-end gap-2">
+          {!online && (
+            <Button variant="ghost" size="md" loading={stopping} onClick={() => void cancel()}>
+              取消登录
+            </Button>
+          )}
+          <Button variant="soft" size="md" onClick={onClose}>
             关闭
           </Button>
         </div>
       </div>
     </div>
   );
+}
+
+function StepIcon({ state }: { state: ConnectProgressStep["state"] }) {
+  if (state === "done") return <Check size={13} className="connect-step-done" />;
+  if (state === "error") return <X size={13} className="connect-step-error" />;
+  if (state === "active") return <Loader2 size={13} className="connect-spin connect-step-active" />;
+  return <Circle size={9} className="connect-step-pending" />;
 }

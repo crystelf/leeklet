@@ -178,6 +178,8 @@ export interface ConnectBot {
   botQq: number;
   nickname: string | null;
   status: ConnectStatus;
+  /** 进行中步骤的可读文本,空闲时为 null */
+  stepLabel?: string | null;
   lastError: string | null;
   createdAt: number;
   ownerRole?: string;
@@ -201,10 +203,43 @@ export interface ConnectCreateRes {
   id: number;
 }
 
-export type ConnectQrRes =
-  | { ok: true; phase: "online" | "offline" }
-  | { ok: true; phase: "awaiting_scan"; image: string; capturedAt: number }
-  | { ok: true; phase: "unavailable"; error: string };
+export type ConnectStepState = "pending" | "active" | "done" | "error";
+
+export interface ConnectProgressStep {
+  id: string;
+  label: string;
+  state: ConnectStepState;
+  detail: string | null;
+  at: number | null;
+}
+
+export interface ConnectProgress {
+  botId: number;
+  activeStep: string | null;
+  /** 已进入终态(上线/失败/未开始) */
+  settled: boolean;
+  error: string | null;
+  startedAt: number | null;
+  updatedAt: number;
+  steps: ConnectProgressStep[];
+}
+
+export type ConnectQrView =
+  | { phase: "online" | "offline" }
+  | { phase: "awaiting_scan"; image: string; capturedAt: number }
+  | { phase: "unavailable"; error: string };
+
+export type ConnectQrRes = { ok: true } & ConnectQrView;
+
+export interface ConnectProgressRes {
+  ok: true;
+  botId: number;
+  status: ConnectStatus;
+  progress: ConnectProgress;
+  qr: ConnectQrView;
+  /** 扫码截止时间,未在扫码等待时为 null */
+  deadline: number | null;
+}
 
 export interface ConnectOwner {
   qq: number;

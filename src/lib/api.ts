@@ -77,8 +77,15 @@ export async function apiFetch<T>(
     try {
       json = JSON.parse(text);
     } catch {
-      json = { ok: false, error: "服务端返回了非 JSON 内容" };
+      // 网关超时/代理错误会返回 HTML,把片段带出来才排查得动
+      const snippet = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
+      json = {
+        ok: false,
+        error: `服务端返回了非 JSON 内容 (HTTP ${res.status})${snippet ? `：${snippet}` : ""}`,
+      };
     }
+  } else if (!res.ok) {
+    json = { ok: false, error: `服务端无响应内容 (HTTP ${res.status})` };
   }
   if (!res.ok) {
     throw new ApiRequestError(

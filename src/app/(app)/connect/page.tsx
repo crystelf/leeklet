@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Share2,
   Play,
@@ -16,6 +16,9 @@ import {
   Circle,
   AlertCircle,
   Loader2,
+  Maximize2,
+  Minimize2,
+  MousePointerClick,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { api, ApiRequestError } from "@/lib/api";
@@ -23,6 +26,7 @@ import { useFetch } from "@/lib/use-fetch";
 import type {
   ConnectBot,
   ConnectBotsRes,
+  ConnectClickRes,
   ConnectProgressRes,
   ConnectProgressStep,
 } from "@/lib/types";
@@ -381,6 +385,7 @@ function ConnectLoginPanel({
   const [res, setRes] = useState<ConnectProgressRes | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [stopping, setStopping] = useState(false);
+  const [zoom, setZoom] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const started = useRef(false);
 
@@ -394,35 +399,50 @@ function ConnectLoginPanel({
     });
   }, [bot.id, bot.status]);
 
+  /** 拉一次进度;返回是否还需要继续轮询 */
+  const fetchProgress = useCallback(async (): Promise<boolean> => {
+    try {
+      const next = await api.get<ConnectProgressRes>(`/connect/bots/${bot.id}/progress`);
+      setRes(next);
+      setError(null);
+      // 出错或已上线就停止轮询,其余情况持续跟进
+      const settledBad = next.progress.settled && !!next.progress.error;
+      return !settledBad && next.qr.phase !== "online";
+    } catch (e) {
+      setError(e instanceof ApiRequestError ? e.body.error : "无法获取登录进度");
+      return true;
+    }
+  }, [bot.id]);
+
   useEffect(() => {
     let alive = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const tick = async () => {
-      try {
-        const next = await api.get<ConnectProgressRes>(`/connect/bots/${bot.id}/progress`);
-        if (!alive) return;
-        setRes(next);
-        setError(null);
-        // 出错或已上线就停止轮询,其余情况持续跟进
-        const settledBad = next.progress.settled && !!next.progress.error;
-        const finished = next.qr.phase === "online";
-        if (!settledBad && !finished) {
-          timer = setTimeout(() => void tick(), PROGRESS_POLL_MS);
-        }
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof ApiRequestError ? e.body.error : "无法获取登录进度");
-        timer = setTimeout(() => void tick(), PROGRESS_POLL_MS * 2);
-      }
+    const loop = async () => {
+      const keepGoing = await fetchProgress();
+      if (!alive || !keepGoing) return;
+      timer = setTimeout(() => void loop(), PROGRESS_POLL_MS);
     };
 
-    void tick();
+    void loop();
     return () => {
       alive = false;
       if (timer) clearTimeout(timer);
     };
-  }, [bot.id]);
+  }, [fetchProgress]);
+
+  /** 在放大的画面上点一下 = 操作容器桌面 */
+  const operate = useCallback(
+    async (nx: number, ny: number) => {
+      const hit = await api.post<ConnectClickRes>(`/connect/bots/${bot.id}/click`, {
+        x: nx,
+        y: ny,
+      });
+      await fetchProgress();
+      return hit;
+    },
+    [bot.id, fetchProgress],
+  );
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1_000);
@@ -456,7 +476,9 @@ function ConnectLoginPanel({
       : "正在按步骤拉起容器,首次登录需要先拉取镜像,可能要几分钟。";
 
   return (
-    <div className="dialog-backdrop" onClick={onClose} aria-hidden="true">
+    <>
+      {/* 背景单独一层:面板不能再嵌在 aria-hidden 里,否则整块弹窗对读屏/自动化不可见 */}
+      <div className="dialog-backdrop" onClick={onClose} aria-hidden="true" />
       <div
         className="connect-qr-panel"
         role="dialog"
@@ -495,8 +517,19 @@ function ConnectLoginPanel({
           {online ? (
             <Empty icon={Wifi} title="已登录" hint="bot 已通过反向连接接入。" />
           ) : qr?.phase === "awaiting_scan" ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="connect-qr-image" src={qr.image} alt="登录二维码" />
+            <button
+              type="button"
+              className="connect-qr-zoomable"
+              onClick={() => setZoom(true)}
+              aria-label="全屏查看容器画面"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="connect-qr-image" src={qr.image} alt="登录二维码" />
+              <span className="connect-qr-zoomhint">
+                <Maximize2 size={12} />
+                点一下看全屏
+              </span>
+            </button>
           ) : failed ? (
             <Empty
               icon={AlertCircle}
@@ -522,7 +555,7 @@ function ConnectLoginPanel({
               : " "}
         </p>
 
-        <div className="flex justify-end gap-2">
+        <div className="connect-qr-actions">
           {!online && (
             <Button variant="ghost" size="md" loading={stopping} onClick={() => void cancel()}>
               取消登录
@@ -532,6 +565,115 @@ function ConnectLoginPanel({
             关闭
           </Button>
         </div>
+      </div>
+      {zoom && qr?.phase === "awaiting_scan" && (
+        <DesktopZoom
+          image={qr.image}
+          botQq={bot.botQq}
+          onOperate={operate}
+          onClose={() => setZoom(false)}
+        />
+      )}
+    </>
+  );
+}
+
+/** 全屏看/操作容器桌面:点画面退出,切到"操作桌面"后点画面即向容器注入点击 */
+function DesktopZoom({
+  image,
+  botQq,
+  onOperate,
+  onClose,
+}: {
+  image: string;
+  botQq: number;
+  onOperate: (nx: number, ny: number) => Promise<ConnectClickRes>;
+  onClose: () => void;
+}) {
+  const [operate, setOperate] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const tapImage = async (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!operate) {
+      onClose();
+      return;
+    }
+    const el = imgRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    // 图就是整屏截图,图上归一化坐标即屏幕归一化坐标
+    const nx = (e.clientX - rect.left) / rect.width;
+    const ny = (e.clientY - rect.top) / rect.height;
+    if (nx < 0 || nx > 1 || ny < 0 || ny > 1) return;
+    try {
+      const hit = await onOperate(nx, ny);
+      setNote(`已点击容器桌面 (${hit.x}, ${hit.y})`);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.body.error : "点击发送失败");
+    }
+  };
+
+  return (
+    <div
+      className={`connect-zoom${operate ? " is-operating" : ""}`}
+      role="dialog"
+      aria-modal="true"
+      onClick={operate ? undefined : onClose}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={imgRef}
+        className="connect-zoom-image"
+        src={image}
+        alt={`${botQq} 的容器桌面`}
+        draggable={false}
+        onClick={(e) => {
+          e.stopPropagation();
+          void tapImage(e);
+        }}
+      />
+      <div className="connect-zoom-bar" onClick={(e) => e.stopPropagation()}>
+        <span className="connect-zoom-note">
+          {error ? (
+            <span className="connect-zoom-fail">
+              <AlertCircle size={12} />
+              {error}
+            </span>
+          ) : note ? (
+            note
+          ) : operate ? (
+            "点击画面 = 点击容器桌面(可点一键登录)"
+          ) : (
+            "整屏原图,点画面任意处退出"
+          )}
+        </span>
+        <Button
+          variant={operate ? "primary" : "soft"}
+          size="sm"
+          onClick={() => {
+            setOperate((v) => !v);
+            setNote(null);
+            setError(null);
+          }}
+        >
+          <MousePointerClick size={14} />
+          {operate ? "退出操作" : "操作桌面"}
+        </Button>
+        <Button variant="soft" size="sm" onClick={onClose}>
+          <Minimize2 size={14} />
+          退出全屏
+        </Button>
       </div>
     </div>
   );

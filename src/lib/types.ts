@@ -241,6 +241,12 @@ export interface ConnectProgressRes {
   deadline: number | null;
 }
 
+export interface ConnectClickRes {
+  ok: true;
+  x: number;
+  y: number;
+}
+
 export interface ConnectOwner {
   qq: number;
   nickname: string | null;

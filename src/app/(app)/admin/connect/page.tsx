@@ -28,6 +28,8 @@ import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { PageHeader } from "@/components/shell/page-header";
 import { isAdmin } from "@/lib/format";
+// .admin-section-title / .admin-section-sub 来自 admin 页,不引入的话小节标题会掉样式
+import "../admin.css";
 import "./connect-admin.css";
 
 const REFRESH_MS = 5_000;
@@ -48,13 +50,18 @@ export default function ConnectAdminPage() {
   const [deleteBot, setDeleteBot] = useState<ConnectBot | null>(null);
   const [limitEdits, setLimitEdits] = useState<Record<number, string>>({});
 
-  const hasActive = (bots.data?.bots ?? []).some((bot) => bot.status !== "idle");
+  const hasActive = (bots.data?.bots ?? []).some(
+    (bot) => bot.status !== "idle",
+  );
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      void bots.reload();
-      void owners.reload();
-    }, hasActive ? 3_000 : REFRESH_MS);
+    const timer = setInterval(
+      () => {
+        void bots.reload();
+        void owners.reload();
+      },
+      hasActive ? 3_000 : REFRESH_MS,
+    );
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasActive]);
@@ -66,14 +73,22 @@ export default function ConnectAdminPage() {
         <PageHeader icon={<ShieldCheck size={22} />} title="Connect 管理" />
         <Card soft>
           <CardBody>
-            <Empty icon={ShieldCheck} title="仅管理员可访问" hint="此页面用于管理所有用户的代挂机器人。" />
+            <Empty
+              icon={ShieldCheck}
+              title="仅管理员可访问"
+              hint="此页面用于管理所有用户的代挂机器人。"
+            />
           </CardBody>
         </Card>
       </>
     );
   }
 
-  const run = async (key: string, action: () => Promise<unknown>, done: string) => {
+  const run = async (
+    key: string,
+    action: () => Promise<unknown>,
+    done: string,
+  ) => {
     setBusy(key);
     try {
       await action();
@@ -110,7 +125,10 @@ export default function ConnectAdminPage() {
   const saveLimit = (qq: number) => {
     const raw = (limitEdits[qq] ?? "").trim();
     const limit = raw === "" ? null : Number(raw);
-    if (limit !== null && (!Number.isFinite(limit) || limit < 0 || limit > 50)) {
+    if (
+      limit !== null &&
+      (!Number.isFinite(limit) || limit < 0 || limit > 50)
+    ) {
       toast.error("上限需为 0-50 的数字");
       return;
     }
@@ -125,7 +143,8 @@ export default function ConnectAdminPage() {
     await Promise.all([bots.reload(), owners.reload()]);
   };
 
-  const loading = (bots.loading && !bots.data) || (owners.loading && !owners.data);
+  const loading =
+    (bots.loading && !bots.data) || (owners.loading && !owners.data);
 
   return (
     <>
@@ -134,17 +153,39 @@ export default function ConnectAdminPage() {
         title="Connect 管理"
         subtitle="管理所有用户的代挂机器人与配额"
         actions={
-          <Button variant="soft" size="sm" onClick={() => void reloadAll()} disabled={bots.loading || owners.loading}>
-            <RefreshCw size={14} className={bots.loading || owners.loading ? "connect-admin-spin" : undefined} />
+          <Button
+            variant="soft"
+            size="sm"
+            onClick={() => void reloadAll()}
+            disabled={bots.loading || owners.loading}
+          >
+            <RefreshCw
+              size={14}
+              className={
+                bots.loading || owners.loading
+                  ? "connect-admin-spin"
+                  : undefined
+              }
+            />
             刷新
           </Button>
         }
       />
 
       {loading ? (
-        <div className="connect-admin-loading"><Spinner /></div>
+        <div className="connect-admin-loading">
+          <Spinner />
+        </div>
       ) : bots.error ? (
-        <Card soft><CardBody><Empty icon={ShieldCheck} title="无法加载" hint={bots.error ?? ""} /></CardBody></Card>
+        <Card soft>
+          <CardBody>
+            <Empty
+              icon={ShieldCheck}
+              title="无法加载"
+              hint={bots.error ?? ""}
+            />
+          </CardBody>
+        </Card>
       ) : (
         <div className="connect-admin-sections stagger">
           {/* 全部代挂 bot */}
@@ -152,13 +193,21 @@ export default function ConnectAdminPage() {
             <h3 className="admin-section-title">
               <BotIcon size={16} />
               全部代挂机器人
-              <span className="connect-admin-count">{bots.data?.bots.length ?? 0}</span>
+              <span className="connect-admin-count">
+                {bots.data?.bots.length ?? 0}
+              </span>
             </h3>
-            <p className="admin-section-sub">开关用于拉起/关闭容器;删除将彻底清除数据目录。</p>
+            <p className="admin-section-sub">
+              开关用于拉起/关闭容器;删除将彻底清除数据目录。
+            </p>
             {(bots.data?.bots.length ?? 0) === 0 ? (
               <Card soft>
                 <CardBody>
-                  <Empty icon={BotIcon} title="暂无代挂机器人" hint="内部会员创建后将展示在这里。" />
+                  <Empty
+                    icon={BotIcon}
+                    title="暂无代挂机器人"
+                    hint="内部会员创建后将展示在这里。"
+                  />
                 </CardBody>
               </Card>
             ) : (
@@ -178,34 +227,49 @@ export default function ConnectAdminPage() {
                       <tr key={bot.id}>
                         <td>
                           <div className="connect-admin-bot">
-                            <img
-                              className="connect-admin-avatar"
-                              src={`https://q.qlogo.cn/headimg_dl?dst_uin=${bot.botQq}&spec=80`}
-                              alt=""
-                              draggable={false}
-                            />
+                            <BotAvatar qq={bot.botQq} />
                             <div>
-                              <p className="connect-admin-bot-name">{bot.nickname || bot.botQq}</p>
-                              <p className="connect-admin-bot-qq">QQ {bot.botQq}</p>
+                              <p className="connect-admin-bot-name">
+                                {bot.nickname || bot.botQq}
+                              </p>
+                              <p className="connect-admin-bot-qq">
+                                QQ {bot.botQq}
+                              </p>
                             </div>
                           </div>
                         </td>
                         <td>
-                          <span className="connect-admin-owner">{bot.ownerQq}</span>
+                          <span className="connect-admin-owner">
+                            {bot.ownerQq}
+                          </span>
                         </td>
                         <td>
-                          <span className={`connect-admin-status is-${bot.status}`}>
-                            {bot.status === "online" ? <Wifi size={11} /> : <WifiOff size={11} />}
+                          <span
+                            className={`connect-admin-status is-${bot.status}`}
+                          >
+                            {bot.status === "online" ? (
+                              <Wifi size={11} />
+                            ) : (
+                              <WifiOff size={11} />
+                            )}
                             {STATUS_LABEL[bot.status]}
                           </span>
                           {bot.lastError && (
-                            <p className="connect-admin-error" title={bot.lastError}>{bot.lastError}</p>
+                            <p
+                              className="connect-admin-error"
+                              title={bot.lastError}
+                            >
+                              {bot.lastError}
+                            </p>
                           )}
                         </td>
                         <td>
                           <Switch
                             checked={bot.status !== "idle"}
-                            disabled={busy === `toggle:${bot.id}` || busy === `remove:${bot.id}`}
+                            disabled={
+                              busy === `toggle:${bot.id}` ||
+                              busy === `remove:${bot.id}`
+                            }
                             onChange={(on) => void toggleBot(bot, on)}
                             ariaLabel={`开关 ${bot.botQq}`}
                           />
@@ -236,11 +300,17 @@ export default function ConnectAdminPage() {
               <Users size={16} />
               托管配额
             </h3>
-            <p className="admin-section-sub">为内部会员单独设置可托管数量;留空保存表示恢复默认上限(默认 5)。</p>
+            <p className="admin-section-sub">
+              为内部会员单独设置可托管数量;留空保存表示恢复默认上限(默认 5)。
+            </p>
             {(owners.data?.owners.length ?? 0) === 0 ? (
               <Card soft>
                 <CardBody>
-                  <Empty icon={Users} title="暂无内部会员" hint="先在「管理」页添加内部会员。" />
+                  <Empty
+                    icon={Users}
+                    title="暂无内部会员"
+                    hint="先在「管理」页添加内部会员。"
+                  />
                 </CardBody>
               </Card>
             ) : (
@@ -253,11 +323,14 @@ export default function ConnectAdminPage() {
                           <p className="connect-admin-owner-name">
                             {owner.nickname || owner.qq}
                             {owner.override != null && (
-                              <span className="connect-admin-override-tag">自定义</span>
+                              <span className="connect-admin-override-tag">
+                                自定义
+                              </span>
                             )}
                           </p>
                           <p className="connect-admin-owner-sub">
-                            QQ {owner.qq} · 已托管 {owner.used}/{owner.effective}
+                            QQ {owner.qq} · 已托管 {owner.used}/
+                            {owner.effective}
                           </p>
                         </div>
                         <div className="connect-admin-limit-row">
@@ -265,7 +338,12 @@ export default function ConnectAdminPage() {
                             className="input connect-admin-limit-input"
                             inputMode="numeric"
                             placeholder="默认"
-                            value={limitEdits[owner.qq] ?? (owner.override != null ? String(owner.override) : "")}
+                            value={
+                              limitEdits[owner.qq] ??
+                              (owner.override != null
+                                ? String(owner.override)
+                                : "")
+                            }
                             onChange={(e) =>
                               setLimitEdits((prev) => ({
                                 ...prev,
@@ -305,5 +383,30 @@ export default function ConnectAdminPage() {
         <span />
       </Modal>
     </>
+  );
+}
+
+function BotAvatar({ qq }: { qq: number }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed || !qq) {
+    return (
+      <span
+        className="connect-admin-avatar connect-admin-avatar-fallback"
+        aria-hidden="true"
+      >
+        <BotIcon size={16} strokeWidth={1.8} />
+      </span>
+    );
+  }
+
+  return (
+    <img
+      className="connect-admin-avatar"
+      src={`https://q.qlogo.cn/headimg_dl?dst_uin=${qq}&spec=100`}
+      alt=""
+      draggable={false}
+      onError={() => setFailed(true)}
+    />
   );
 }

@@ -170,6 +170,11 @@
 }
 
 /* ---- 二维码弹窗 ---- */
+/* 只淡入:居中靠下面的 translate,动画再碰 transform 就会被顶到右下角 */
+@keyframes connect-qr-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .connect-qr-panel {
   position: fixed;
   left: 50%;
@@ -185,6 +190,7 @@
   padding: 22px;
   /* 和 .dialog-panel 同层,压在自己的背景之上 */
   z-index: 96;
+  animation: connect-qr-fade-in 0.2s ease forwards;
 }
 .connect-qr-hint {
   margin: 6px 0 0;

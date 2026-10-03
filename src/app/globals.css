@@ -1,12 +1,5 @@
 @import "tailwindcss";
 
-/* ==========================================================================
-   Leeklet · Miku 青绿设计系统
-   - 配色：青绿主调 + Miku 粉点缀（发尾粉），白天晨雾青白 / 夜晚深青夜空
-   - 曲线：复刻 css-motion 的贝塞尔（pop / theme / drawer / in-out / back-out）
-   - 签名：飘落大葱叶片 + 音符 + 日月 toggle
-   ========================================================================== */
-
 @theme {
   --font-display: var(--font-quicksand), ui-rounded, "SF Pro Rounded",
     "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -260,8 +253,13 @@ html.theme-transitioning *::after {
   will-change: transform, opacity;
 }
 
-/* stagger helpers */
-.stagger > * {
+/* stagger helpers
+   弹层(.dialog-* / .connect-qr-panel / .connect-zoom)用 transform 居中,而 rise-in 的
+   transform 会盖掉它,弹窗就会落到右下角;所以入场动画只给普通内容块。
+   这里用 :where() 保持 (0,1,0) 的选择器权重,下面的 animation-delay 才能继续生效。 */
+.stagger > *:where(
+  :not(.dialog-backdrop):not(.dialog-panel):not(.connect-qr-panel):not(.connect-zoom)
+) {
   animation: rise-in 0.55s var(--ease-theme) both;
 }
 .stagger > *:nth-child(1) { animation-delay: 0.04s; }

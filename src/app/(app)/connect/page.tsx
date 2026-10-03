@@ -54,7 +54,8 @@ const STATUS_LABEL: Record<ConnectBot["status"], string> = {
 
 export default function ConnectPage() {
   const { user } = useAuth();
-  const { data, loading, error, reload } = useFetch<ConnectBotsRes>("/connect/bots");
+  const { data, loading, error, reload } =
+    useFetch<ConnectBotsRes>("/connect/bots");
   const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -71,12 +72,16 @@ export default function ConnectPage() {
   useEffect(() => {
     const timer = setInterval(
       () => void reload(),
-      hasActive ? ACTIVE_REFRESH_MS : LIST_REFRESH_MS
+      hasActive ? ACTIVE_REFRESH_MS : LIST_REFRESH_MS,
     );
     return () => clearInterval(timer);
   }, [reload, hasActive]);
 
-  const run = async (key: string, action: () => Promise<unknown>, done: string) => {
+  const run = async (
+    key: string,
+    action: () => Promise<unknown>,
+    done: string,
+  ) => {
     setBusy(key);
     try {
       await action();
@@ -113,15 +118,27 @@ export default function ConnectPage() {
       toast.error("请输入 5-11 位数字的 QQ 号");
       return;
     }
-    await run("create", () => api.post("/connect/bots", { qq: Number(qq) }), "已创建,点击登录开始托管");
+    await run(
+      "create",
+      () => api.post("/connect/bots", { qq: Number(qq) }),
+      "已创建,点击登录开始托管",
+    );
     setCreateQq("");
     setCreateOpen(false);
   };
 
   const stop = (bot: ConnectBot) =>
-    run(`stop:${bot.id}`, () => api.post(`/connect/bots/${bot.id}/stop`), `已下线 ${bot.botQq}`);
+    run(
+      `stop:${bot.id}`,
+      () => api.post(`/connect/bots/${bot.id}/stop`),
+      `已下线 ${bot.botQq}`,
+    );
   const remove = async (bot: ConnectBot) => {
-    await run(`remove:${bot.id}`, () => api.delete(`/connect/bots/${bot.id}`), `已删除 ${bot.botQq}(含数据目录)`);
+    await run(
+      `remove:${bot.id}`,
+      () => api.delete(`/connect/bots/${bot.id}`),
+      `已删除 ${bot.botQq}(含数据目录)`,
+    );
     setDeleteBot(null);
   };
 
@@ -137,11 +154,23 @@ export default function ConnectPage() {
         subtitle="托管自己的代挂机器人"
         actions={
           <div className="connect-actions">
-            <Button variant="soft" size="sm" onClick={() => void reload()} disabled={loading}>
-              <RefreshCw size={14} className={loading ? "connect-spin" : undefined} />
+            <Button
+              variant="soft"
+              size="sm"
+              onClick={() => void reload()}
+              disabled={loading}
+            >
+              <RefreshCw
+                size={14}
+                className={loading ? "connect-spin" : undefined}
+              />
               刷新
             </Button>
-            <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setCreateOpen(true)}
+            >
               <Plus size={14} />
               创建代挂
             </Button>
@@ -153,12 +182,23 @@ export default function ConnectPage() {
         <StatCard
           label="托管配额"
           value={quota ? `${quota.used}/${quota.max}` : "—"}
-          hint={quota?.override != null ? "管理员已单独调高配额" : `默认上限 ${quota?.default ?? 5}`}
+          hint={
+            quota?.override != null
+              ? "管理员已单独调高配额"
+              : `默认上限 ${quota?.default ?? 5}`
+          }
         />
-        <StatCard label="在线" value={String(onlineCount)} tone="online" hint="反向连接正常" />
+        <StatCard
+          label="在线"
+          value={String(onlineCount)}
+          tone="online"
+          hint="反向连接正常"
+        />
         <StatCard
           label="等待扫码"
-          value={String(bots.filter((bot) => bot.status === "awaiting_scan").length)}
+          value={String(
+            bots.filter((bot) => bot.status === "awaiting_scan").length,
+          )}
           tone="warn"
           hint="容器运行中,等待登录"
         />
@@ -172,7 +212,12 @@ export default function ConnectPage() {
               title="无法加载 Connect 列表"
               hint={error}
               action={
-                <Button variant="soft" size="sm" className="mt-3" onClick={() => void reload()}>
+                <Button
+                  variant="soft"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => void reload()}
+                >
                   重试
                 </Button>
               }
@@ -191,7 +236,12 @@ export default function ConnectPage() {
               title="还没有托管机器人"
               hint="输入 bot 的 QQ 号创建,系统将自动分配部署目录。"
               action={
-                <Button variant="primary" size="sm" className="mt-3" onClick={() => setCreateOpen(true)}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => setCreateOpen(true)}
+                >
                   <Plus size={14} />
                   创建代挂
                 </Button>
@@ -278,7 +328,9 @@ function StatCard({
     <Card className="connect-stat-card">
       <CardBody>
         <div className="connect-stat-top">{label}</div>
-        <div className={`connect-stat-num${tone ? ` is-${tone}` : ""}`}>{value}</div>
+        <div className={`connect-stat-num${tone ? ` is-${tone}` : ""}`}>
+          {value}
+        </div>
         <p className="text-xs" style={{ color: "var(--fg-muted)", margin: 0 }}>
           {hint}
         </p>
@@ -327,7 +379,11 @@ function BotCard({
             <p className="connect-qq">QQ {bot.botQq}</p>
           </div>
           <span className={`connect-status is-${bot.status}`}>
-            {bot.status === "online" ? <Wifi size={12} /> : <WifiOff size={12} />}
+            {bot.status === "online" ? (
+              <Wifi size={12} />
+            ) : (
+              <WifiOff size={12} />
+            )}
             {STATUS_LABEL[bot.status]}
           </span>
         </div>
@@ -340,7 +396,12 @@ function BotCard({
               登录
             </Button>
           ) : bot.status === "online" ? (
-            <Button variant="soft" size="sm" loading={busy === `stop:${bot.id}`} onClick={onStop}>
+            <Button
+              variant="soft"
+              size="sm"
+              loading={busy === `stop:${bot.id}`}
+              onClick={onStop}
+            >
               <Square size={13} />
               下线
             </Button>
@@ -350,7 +411,12 @@ function BotCard({
                 <QrCode size={13} />
                 查看进度
               </Button>
-              <Button variant="ghost" size="sm" loading={busy === `stop:${bot.id}`} onClick={onStop}>
+              <Button
+                variant="ghost"
+                size="sm"
+                loading={busy === `stop:${bot.id}`}
+                onClick={onStop}
+              >
                 取消登录
               </Button>
             </>
@@ -395,21 +461,27 @@ function ConnectLoginPanel({
     started.current = true;
     if (bot.status !== "idle") return;
     api.post(`/connect/bots/${bot.id}/login`).catch((e) => {
-      setError(e instanceof ApiRequestError ? e.body.error : "登录请求发送失败");
+      setError(
+        e instanceof ApiRequestError ? e.body.error : "登录请求发送失败",
+      );
     });
   }, [bot.id, bot.status]);
 
   /** 拉一次进度;返回是否还需要继续轮询 */
   const fetchProgress = useCallback(async (): Promise<boolean> => {
     try {
-      const next = await api.get<ConnectProgressRes>(`/connect/bots/${bot.id}/progress`);
+      const next = await api.get<ConnectProgressRes>(
+        `/connect/bots/${bot.id}/progress`,
+      );
       setRes(next);
       setError(null);
       // 出错或已上线就停止轮询,其余情况持续跟进
       const settledBad = next.progress.settled && !!next.progress.error;
       return !settledBad && next.qr.phase !== "online";
     } catch (e) {
-      setError(e instanceof ApiRequestError ? e.body.error : "无法获取登录进度");
+      setError(
+        e instanceof ApiRequestError ? e.body.error : "无法获取登录进度",
+      );
       return true;
     }
   }, [bot.id]);
@@ -434,10 +506,13 @@ function ConnectLoginPanel({
   /** 在放大的画面上点一下 = 操作容器桌面 */
   const operate = useCallback(
     async (nx: number, ny: number) => {
-      const hit = await api.post<ConnectClickRes>(`/connect/bots/${bot.id}/click`, {
-        x: nx,
-        y: ny,
-      });
+      const hit = await api.post<ConnectClickRes>(
+        `/connect/bots/${bot.id}/click`,
+        {
+          x: nx,
+          y: ny,
+        },
+      );
       await fetchProgress();
       return hit;
     },
@@ -466,9 +541,15 @@ function ConnectLoginPanel({
   const failed = res?.progress.error ?? error;
   const online = qr?.phase === "online";
   const remaining =
-    res?.deadline && res.deadline > now ? Math.ceil((res.deadline - now) / 1000) : null;
+    res?.deadline && res.deadline > now
+      ? Math.ceil((res.deadline - now) / 1000)
+      : null;
 
-  const title = online ? "登录成功" : failed ? "登录失败" : `正在登录 ${bot.botQq}`;
+  const title = online
+    ? "登录成功"
+    : failed
+      ? "登录失败"
+      : `正在登录 ${bot.botQq}`;
   const subtitle = online
     ? "bot 已通过反向连接接入,可以关闭此窗口。"
     : failed
@@ -485,7 +566,10 @@ function ConnectLoginPanel({
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="font-display text-lg font-bold" style={{ color: "var(--fg)" }}>
+        <h3
+          className="font-display text-lg font-bold"
+          style={{ color: "var(--fg)" }}
+        >
           {title}
         </h3>
         <p className="connect-qr-hint">{subtitle}</p>
@@ -501,7 +585,9 @@ function ConnectLoginPanel({
             <li key={step.id} className={`connect-step-row is-${step.state}`}>
               <StepIcon state={step.state} />
               <span className="connect-step-label">{step.label}</span>
-              {step.detail && <span className="connect-step-detail">{step.detail}</span>}
+              {step.detail && (
+                <span className="connect-step-detail">{step.detail}</span>
+              )}
             </li>
           ))}
         </ol>
@@ -523,8 +609,11 @@ function ConnectLoginPanel({
               onClick={() => setZoom(true)}
               aria-label="全屏查看容器画面"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="connect-qr-image" src={qr.image} alt="登录二维码" />
+              <img
+                className="connect-qr-image"
+                src={qr.image}
+                alt="登录二维码"
+              />
               <span className="connect-qr-zoomhint">
                 <Maximize2 size={12} />
                 点一下看全屏
@@ -537,11 +626,7 @@ function ConnectLoginPanel({
               hint="原因见上方步骤与错误提示,关闭后可以重新点击登录。"
             />
           ) : qr?.phase === "unavailable" ? (
-            <Empty
-              icon={Loader2}
-              title="正在等待二维码出现"
-              hint={qr.error}
-            />
+            <Empty icon={Loader2} title="正在等待二维码出现" hint={qr.error} />
           ) : (
             <Spinner />
           )}
@@ -557,7 +642,12 @@ function ConnectLoginPanel({
 
         <div className="connect-qr-actions">
           {!online && (
-            <Button variant="ghost" size="md" loading={stopping} onClick={() => void cancel()}>
+            <Button
+              variant="ghost"
+              size="md"
+              loading={stopping}
+              onClick={() => void cancel()}
+            >
               取消登录
             </Button>
           )}
@@ -611,7 +701,6 @@ function DesktopZoom({
     const el = imgRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    // 图就是整屏截图,图上归一化坐标即屏幕归一化坐标
     const nx = (e.clientX - rect.left) / rect.width;
     const ny = (e.clientY - rect.top) / rect.height;
     if (nx < 0 || nx > 1 || ny < 0 || ny > 1) return;
@@ -620,7 +709,9 @@ function DesktopZoom({
       setNote(`已点击容器桌面 (${hit.x}, ${hit.y})`);
       setError(null);
     } catch (err) {
-      setError(err instanceof ApiRequestError ? err.body.error : "点击发送失败");
+      setError(
+        err instanceof ApiRequestError ? err.body.error : "点击发送失败",
+      );
     }
   };
 
@@ -631,7 +722,7 @@ function DesktopZoom({
       aria-modal="true"
       onClick={operate ? undefined : onClose}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* 容器整屏截图,要按原始尺寸做坐标换算,不能过 next/image */}
       <img
         ref={imgRef}
         className="connect-zoom-image"
@@ -680,8 +771,10 @@ function DesktopZoom({
 }
 
 function StepIcon({ state }: { state: ConnectProgressStep["state"] }) {
-  if (state === "done") return <Check size={13} className="connect-step-done" />;
+  if (state === "done")
+    return <Check size={13} className="connect-step-done" />;
   if (state === "error") return <X size={13} className="connect-step-error" />;
-  if (state === "active") return <Loader2 size={13} className="connect-spin connect-step-active" />;
+  if (state === "active")
+    return <Loader2 size={13} className="connect-spin connect-step-active" />;
   return <Circle size={9} className="connect-step-pending" />;
 }
